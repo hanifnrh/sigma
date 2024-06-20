@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  
+  :root {
+    --color-indigo: #6366F1;
+    --color-fuchsia: #EC4899;
+    --color-emerald: #10B981;
+    
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+.nav {
+  width: 80%;
+  margin: 0 auto;
+}
+.nav ul {
+  list-style: none;
+  text-align: center;
+}
+.nav ul li {
+  display: flex;
+}
+.nav ul li a {
+  display: block;
+  text-decoration: none;
+  margin: 0 10px;
+}
+.nav ul li a,
+.nav ul li a:after,
+.nav ul li a:before {
+  transition: all .5s;
+}
+
+
+
+.nav.stroke ul li a,
+.nav.fill ul li a {
+  position: relative;
+}
+
+.nav.stroke ul li a:after,
+.nav.fill ul li a:after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 0%;
+  content: '.';
+  color: transparent;
+  background: black;
+  height: 1px;
+}
+
+.nav.stroke ul li a:hover:after {
+  width: 100%;
+}
+
+.heading-hero {
+  font-size: 40px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav.stroke ul li a:after,
+.nav.fill ul li a:after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 0%;
+  content: '.';
+  color: transparent;
+  background: white;
+  height: 1px;
+}
+}
+
+/* CLOCK */
+.main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  gap: 0.8rem;
+  font-size: 7rem;
+  text-align: center;
+}
+
+.item {
+  width: 250px;
+}
+
+.label {
+  font-size: 1.3rem;
+  color: grey;
+  text-transform: uppercase;
+}
+
+/*
+ Clock's font size and item's width is reduced by 30% per screen size while label's font size is reduced by 20% per screen size 
+*/
+
+/* For large devices */
+@media only screen and (max-width: 1200px) {
+  .clock {
+    font-size: 4.9rem;
+  }
+
+  .item {
+    width: 175px;
+  }
+
+  .label {
+    font-size: 1.04rem;
+  }
+}
+
+/* For medium devices */
+@media only screen and (max-width: 992px) {
+  .clock {
+    font-size: 3.43rem;
+  }
+
+  .item {
+    width: 122.5px;
+  }
+
+  .label {
+    font-size: 0.832rem;
+  }
+}
+
+/* For small devices */
+@media only screen and (max-width: 768px) {
+  .clock {
+    font-size: 2.401rem;
+  }
+
+  .item {
+    width: 85.75px;
+  }
+
+  .label {
+    font-size: 0.6656rem;
+  }
+}
+
+/* For small devices */
+@media only screen and (max-width: 576px) {
+  .clock {
+    font-size: 1.6807rem;
+  }
+
+  .item {
+    width: 60.025px;
+  }
+
+  .label {
+    font-size: 0.53248rem;
+  }
+}
+
+/* BACKGROUND */
+/* .background {
+  background-image: url("https://i.pinimg.com/564x/21/cf/98/21cf98aa85660a1e2e8bf63704e4a792.jpg");
+} */
+
+.navbar-logo {
+  content: url('/sigma.png'); /* Default light mode logo */
+}
+
+.dark .navbar-logo {
+  content: url('/sigmawhite.png'); /* Dark mode logo */
+}
