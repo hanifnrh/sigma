@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 @layer base {
-  
+
   :root {
     --color-indigo: #6366F1;
     --color-fuchsia: #EC4899;
     --color-emerald: #10B981;
-    
+
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
 
@@ -80,22 +80,22 @@
     @apply bg-background text-foreground;
   }
 }
-.nav {
-  width: 80%;
-  margin: 0 auto;
-}
+
 .nav ul {
   list-style: none;
   text-align: center;
 }
+
 .nav ul li {
   display: flex;
 }
+
 .nav ul li a {
   display: block;
   text-decoration: none;
   margin: 0 10px;
 }
+
 .nav ul li a,
 .nav ul li a:after,
 .nav ul li a:before {
@@ -132,19 +132,11 @@
 }
 
 @media (prefers-color-scheme: dark) {
+
   .nav.stroke ul li a:after,
-.nav.fill ul li a:after {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  width: 0%;
-  content: '.';
-  color: transparent;
-  background: white;
-  height: 1px;
-}
+  .nav.fill ul li a:after {
+    background: white;
+  }
 }
 
 /* CLOCK */
@@ -245,9 +237,11 @@
 } */
 
 .navbar-logo {
-  content: url('/sigma.png'); /* Default light mode logo */
+  content: url('/sigma.png');
+  /* Default light mode logo */
 }
 
 .dark .navbar-logo {
-  content: url('/sigmawhite.png'); /* Dark mode logo */
+  content: url('/sigmawhite.png');
+  /* Dark mode logo */
 }

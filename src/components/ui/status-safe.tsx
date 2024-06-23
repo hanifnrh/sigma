@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const StatusSafe = ({
-    children = "Very Good",
+    children = "Excellent",
     status = "success",
     className,
 }: {

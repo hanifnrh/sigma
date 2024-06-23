@@ -1,9 +1,10 @@
 // page.tsx
 
 "use client";
-import AreaChart from "@/components/ui/AreaChart";
 import ParticlesBackground from '@/components/ui/ParticlesBackground';
+import dynamic from 'next/dynamic';
 
+const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 export default function Graph() {
     return (
         <main>

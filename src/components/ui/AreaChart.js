@@ -1,5 +1,6 @@
 // components/AreaChart.js
 "use client";
+
 import ApexCharts from 'apexcharts';
 import { useEffect } from 'react';
 
