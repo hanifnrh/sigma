@@ -328,6 +328,12 @@ body {
   box-shadow: 0px 0px 10px 0px rgba(101, 93, 249, 0.25);
 }
 
+.hovered-nav {
+  background-color: #4B43E4;
+  background: #4B43E4;
+  box-shadow: 0px 0px 10px 0px rgba(101, 93, 249, 0.25);
+}
+
 .navbar-title{
   color: #AEAEC0;
   font-size: small;

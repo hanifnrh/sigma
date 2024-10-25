@@ -7,6 +7,7 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table"
+import { Button } from "./button"
 
 const sensors = [
     {
@@ -50,7 +51,13 @@ export function SensorStatus() {
                         {sensors.map((sensor, index) => (
                             <TableRow key={index}>
                                 <TableCell className="font-medium">{sensor.sensor}</TableCell>
-                                <TableCell className="">{sensor.status}</TableCell>
+                                <TableCell className={`px-2 py-1 font-medium rounded-lg"
+                                    : "text-red-600 bg-red-100"
+                                    }`}>
+                                    <Button variant={sensor.status === "Aktif" ? "aktif" : "mati"}>
+                                        {sensor.status}
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

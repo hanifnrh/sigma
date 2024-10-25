@@ -100,13 +100,12 @@ export default function Dashboard() {
                             </p>
                             <SensorStatus></SensorStatus>
                         </div>
-                        <div className='w-full ml-2'>
+                        <div className='w-full ml-2 h-full'>
                             <p className='navbar-title mb-2'>
                                 GRAFIK KESELURUHAN
                             </p>
                             <GrafikKeseluruhan></GrafikKeseluruhan>
                         </div>
-
                     </div>
                 </div>
 

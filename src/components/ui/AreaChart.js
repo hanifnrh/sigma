@@ -1,10 +1,9 @@
-// components/AreaChart.js
 "use client";
 
 import ApexCharts from 'apexcharts';
 import { useEffect } from 'react';
 
-const AreaChart = ({ id }) => {
+const AreaChart = ({ id, color }) => {
     useEffect(() => {
         const options = {
             chart: {
@@ -30,8 +29,8 @@ const AreaChart = ({ id }) => {
                 gradient: {
                     opacityFrom: 0.55,
                     opacityTo: 0,
-                    shade: "#765DFF",
-                    gradientToColors: ["#765DFF"],
+                    shade: color,  // Use the passed color
+                    gradientToColors: [color], // Use the passed color
                 },
             },
             dataLabels: {
@@ -39,6 +38,7 @@ const AreaChart = ({ id }) => {
             },
             stroke: {
                 width: 6,
+                colors: [color], // Set the stroke color to the passed color
             },
             grid: {
                 show: false,
@@ -53,7 +53,7 @@ const AreaChart = ({ id }) => {
                 {
                     name: "New users",
                     data: [6500, 6418, 6456, 6526, 6356, 6456],
-                    color: "#765DFF",
+                    color: color, // Use the passed color
                 },
             ],
             xaxis: {
@@ -81,7 +81,7 @@ const AreaChart = ({ id }) => {
                 chart.destroy();
             };
         }
-    }, [id]);
+    }, [id, color]); // Add color to dependencies
 
     return (
         <div id={id} className="h-full" />
