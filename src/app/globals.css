@@ -2,32 +2,337 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+@layer base {
+
+  :root {
+    --color-indigo: #6366F1;
+    --color-fuchsia: #EC4899;
+    --color-emerald: #10B981;
+
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+@layer base {
+  * {
+    @apply border-border;
   }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@font-face {
+  font-family: 'Body Bold';
+  src: url('/fonts/GoogleSans-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Body Bold Italic';
+  src:
+    url('/fonts/GoogleSans-BoldItalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Body';
+  src:
+    url('/fonts/GoogleSans-Medium.ttf') format('truetype');
+  font-weight: medium;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Body Light';
+  src:
+    url('/fonts/GoogleSans-Regular.ttf') format('truetype');
+  font-weight: light;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Body Italic';
+  src:
+    url('/fonts/GoogleSans-Italic.ttf') format('truetype');
+  font-weight: light;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Head";
+  src: url("https://db.onlinewebfonts.com/t/cec88e5a4cf367c4620cd23c5a184439.eot");
+  src: url("https://db.onlinewebfonts.com/t/cec88e5a4cf367c4620cd23c5a184439.eot?#iefix")format("embedded-opentype"),
+  url("https://db.onlinewebfonts.com/t/cec88e5a4cf367c4620cd23c5a184439.woff2")format("woff2"),
+  url("https://db.onlinewebfonts.com/t/cec88e5a4cf367c4620cd23c5a184439.woff")format("woff"),
+  url("https://db.onlinewebfonts.com/t/cec88e5a4cf367c4620cd23c5a184439.ttf")format("truetype"),
+  url("https://db.onlinewebfonts.com/t/cec88e5a4cf367c4620cd23c5a184439.svg#PolySans Median")format("svg");
+}
+
+.body-bold-italic {
+  font-family: 'Body Bold Italic';
+}
+
+.body-bold {
+  font-family: 'Body Bold';
+}
+
+.body-light {
+  font-family: 'Body Light';
+}
+
+.body-italic {
+  font-family: 'Body Italic';
+}
+
+.body {
+  font-family: 'Body';
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: 'Body';
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+.nav ul {
+  list-style: none;
+  text-align: center;
+}
+
+.nav ul li {
+  display: flex;
+}
+
+.nav ul li a {
+  display: block;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.nav ul li a,
+.nav ul li a:after,
+.nav ul li a:before {
+  transition: all .5s;
+}
+
+
+
+.nav.stroke ul li a,
+.nav.fill ul li a {
+  position: relative;
+}
+
+.nav.stroke ul li a:after,
+.nav.fill ul li a:after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 0%;
+  content: '.';
+  color: transparent;
+  background: black;
+  height: 1px;
+}
+
+.nav.stroke ul li a:hover:after {
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+
+  .nav.stroke ul li a:after,
+  .nav.fill ul li a:after {
+    background: white;
   }
+}
+
+/* CLOCK */
+.main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  gap: 0.8rem;
+  font-size: 7rem;
+  text-align: center;
+}
+
+.item {
+  width: 250px;
+}
+
+.label {
+  font-size: 1.3rem;
+  color: grey;
+  text-transform: uppercase;
+}
+
+/*
+ Clock's font size and item's width is reduced by 30% per screen size while label's font size is reduced by 20% per screen size 
+*/
+
+/* For large devices */
+@media only screen and (max-width: 1200px) {
+  .clock {
+    font-size: 4.9rem;
+  }
+
+  .item {
+    width: 175px;
+  }
+
+  .label {
+    font-size: 1.04rem;
+  }
+}
+
+/* For medium devices */
+@media only screen and (max-width: 992px) {
+  .clock {
+    font-size: 3.43rem;
+  }
+
+  .item {
+    width: 122.5px;
+  }
+
+  .label {
+    font-size: 0.832rem;
+  }
+}
+
+/* For small devices */
+@media only screen and (max-width: 768px) {
+  .clock {
+    font-size: 2.401rem;
+  }
+
+  .item {
+    width: 85.75px;
+  }
+
+  .label {
+    font-size: 0.6656rem;
+  }
+}
+
+/* For small devices */
+@media only screen and (max-width: 576px) {
+  .clock {
+    font-size: 1.6807rem;
+  }
+
+  .item {
+    width: 60.025px;
+  }
+
+  .label {
+    font-size: 0.53248rem;
+  }
+}
+
+/* BACKGROUND */
+/* .background {
+  background-image: url("https://i.pinimg.com/564x/21/cf/98/21cf98aa85660a1e2e8bf63704e4a792.jpg");
+} */
+.bg-hero {
+  background-image: url('/hero.png');
+  background-repeat: no-repeat;
+  border-radius: 30px;
+  background-size: cover;
+  background-position: center;
+}
+
+.navbar-logo {
+  content: url('/sigmalogo.png');
+  /* Default light mode logo */
+}
+
+.dark .navbar-logo {
+  content: url('/sigmalogo.png');
+  /* Dark mode logo */
+}
+
+.navbar {
+  background-color: #655DF9;
+  background: #655DF9;
+  box-shadow: 0px 0px 10px 0px rgba(101, 93, 249, 0.25);
+}
+
+.navbar-title{
+  color: #AEAEC0;
+  font-size: small;
+}
+
+.title-head {
+  font-family: 'Head';
 }
