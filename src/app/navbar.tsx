@@ -153,7 +153,7 @@ const Navbar: React.FC = () => {
                             </div>
                         </div>
 
-                        <Button variant="outline" className='w-full mt-5'>Log Out</Button>
+                        <Button variant="outline" className='w-full mt-5 body-bold'>Log Out</Button>
                     </div>
 
                 </div>
