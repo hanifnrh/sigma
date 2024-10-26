@@ -22,7 +22,7 @@ export default function GrafikAmonia() {
                     </div>
                 </div>
             </div>
-            <AreaChart id="area-chart1" color="#FFC107" />
+            <AreaChart id="area-chart1" color="#28A745" />
         </main>
     );
 }

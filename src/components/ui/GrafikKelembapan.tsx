@@ -22,7 +22,7 @@ export default function GrafikKelembapan() {
                     </div>
                 </div>
             </div>
-            <AreaChart id="area-chart4" color="#FFC107" />
+            <AreaChart id="area-chart4" color="#FF5733" />
         </main>
     );
 }

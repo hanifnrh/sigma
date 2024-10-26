@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { useState } from 'react';
 import { GiRooster } from "react-icons/gi";
+import { GoHistory } from "react-icons/go";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import { IoRocketOutline } from "react-icons/io5";
 import { LuBook } from "react-icons/lu";
@@ -69,7 +70,7 @@ const Navbar: React.FC = () => {
                         </li>
                         <li>
                             <Link
-                                href="/data-ayams"
+                                href="/data-ayam"
                                 className={`flex items-center p-2 rounded-lg ${currentPath === '/data-ayam' ? 'navbar text-white' : 'text-gray-900 dark:text-white'} hover:bg-purple-400 hover:text-white group`}
                             >
                                 <GiRooster />
@@ -83,6 +84,15 @@ const Navbar: React.FC = () => {
                             >
                                 <MdOutlineSensors />
                                 <span className="flex-1 ms-3 whitespace-nowrap">Perangkat Sensor</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/riwayat"
+                                className={`flex items-center p-2 rounded-lg ${currentPath === '/riwayat' ? 'navbar text-white' : 'text-gray-900 dark:text-white'} hover:bg-purple-400 hover:text-white group`}
+                            >
+                                <GoHistory />
+                                <span className="flex-1 ms-3 whitespace-nowrap">Riwayat</span>
                             </Link>
                         </li>
                     </ul>

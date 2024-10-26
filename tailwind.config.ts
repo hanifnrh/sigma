@@ -26,6 +26,7 @@ const config = {
         foreground: "hsl(var(--foreground))",
         customPurple: '#8735EB',
         customGreen: "#00B548",
+        customRed: "#EB1010",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

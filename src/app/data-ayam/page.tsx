@@ -1,6 +1,7 @@
 // page.tsx
 
 "use client";
+import AyamCounter from '@/components/ui/AyamCounter';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -9,22 +10,22 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import GrafikAmonia from '@/components/ui/GrafikAmonia';
-import GrafikKelembapan from '@/components/ui/GrafikKelembapan';
-import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
-import GrafikSuhu from '@/components/ui/GrafikSuhu';
+import GrafikMortalitas from '@/components/ui/GrafikMortalitas';
+import JumlahAyam from '@/components/ui/JumlahAyam';
 import { ModeToggle } from '@/components/ui/mode-toggle';
+import MortalitasAyam from '@/components/ui/MortalitasAyam';
+import UsiaAyam from '@/components/ui/UsiaAyam';
 import dynamic from 'next/dynamic';
+import { FaPlay, FaStop } from "react-icons/fa";
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
-
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 
-export default function Grafik() {
+export default function DataAyam() {
     return (
         <main className="p-4 pt-0 sm:ml-64 bg-white dark:bg-zinc-900">
             <Navbar />
@@ -47,7 +48,7 @@ export default function Grafik() {
                 </div>
                 <div className="flex header py-2 px-4 body-light justify-between items-center border-b bg-white">
                     <div className='flex body-bold text-2xl'>
-                        Grafik
+                        Data Ayam
                     </div>
                     <div className="flex justify-center items-center text-4xl">
                         <DropdownMenu>
@@ -75,25 +76,81 @@ export default function Grafik() {
             </div>
 
             <div className="page flex items-center justify-between p-4">
-                <div className="flex flex-col justify-between items-center w-full h-full">
-                    <div className="flex flex-col lg:flex-row justify-between items-center w-full h-full">
-                        <div className='mr-2 w-full h-full'>
-                            <GrafikKeseluruhan />
+                <div className="flex flex-col justify-between items-center w-full">
+                    <div className='flex justify-between items-start w-full'>
+                        <div className='flex justify-start w-full'>
+                            <div>
+                                <Button variant={"mulaiTernak"}>
+                                    <div className='h-full px-4 py-4 flex justify-center items-center text-xl'>
+                                        <FaPlay className='mr-2' />
+                                        Mulai Ternak
+                                    </div>
+                                </Button>
+                                <p className='mt-2 text-customGreen'>
+                                    Ternak sedang berlangsung
+                                </p>
+                            </div>
+                            <div className='ml-4'>
+                                <Button variant={"panen"}>
+                                    <div className='h-full px-4 py-4 flex justify-center items-center text-xl'>
+                                        <FaStop className='mr-2' />
+                                        Panen
+                                    </div>
+                                </Button>
+                                <p className='mt-2 text-customRed'>
+                                    Panen dalam 22 hari lagi
+                                </p>
+                            </div>
                         </div>
-                        <div className='ml-2 w-full h-full'>
-                            <GrafikAmonia />
+                        <Button variant={"jumlahAyam"}>
+                            <div className='text-xl'>
+                                Jumlah ayam awal: 12.500
+                            </div>
+                        </Button>
+                    </div>
+
+                    <div className='w-full flex items-center justify-between mt-10'>
+                        <div>
+                            <div className='navbar-title mb-2'>
+                                USIA AYAM
+                            </div>
+                            <UsiaAyam />
+                        </div>
+                        <div>
+                            <div className='navbar-title mb-2'>
+                                JUMLAH AYAM
+                            </div>
+                            <JumlahAyam />
+                        </div>
+                        <div>
+                            <div className='navbar-title mb-2'>
+                                MORTALITAS AYAM
+                            </div>
+                            <MortalitasAyam />
                         </div>
                     </div>
-                    <div className="flex flex-col lg:flex-row justify-between items-center w-full h-full mt-4">
-                        <div className='mr-2 w-full h-full'>
-                            <GrafikSuhu />
+
+                    <div className='mt-10 w-full flex justify-between'>
+                        <div className='w-full h-full mr-2'>
+                            <p className='navbar-title mb-2'>
+                                GRAFIK MORTALITAS
+                            </p>
+                            <GrafikMortalitas></GrafikMortalitas>
                         </div>
-                        <div className='ml-2 w-full h-full'>
-                            <GrafikKelembapan />
+                        <div className='w-full h-full ml-2'>
+                            <p className='navbar-title mb-2'>
+                                KENDALI JUMLAH AYAM
+                            </p>
+                            <div className='border rounded-lg'>
+                            <AyamCounter></AyamCounter>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
+
+
 
         </main>
     );

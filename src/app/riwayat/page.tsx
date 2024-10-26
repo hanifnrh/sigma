@@ -1,6 +1,5 @@
-// page.tsx
-
 "use client";
+import { Aktivitas } from '@/components/ui/Aktivitas';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -9,22 +8,19 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import GrafikAmonia from '@/components/ui/GrafikAmonia';
-import GrafikKelembapan from '@/components/ui/GrafikKelembapan';
 import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
-import GrafikSuhu from '@/components/ui/GrafikSuhu';
 import { ModeToggle } from '@/components/ui/mode-toggle';
+import { RiwayatTable } from '@/components/ui/RiwayatTable';
 import dynamic from 'next/dynamic';
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
-
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 
-export default function Grafik() {
+export default function Riwayat() {
     return (
         <main className="p-4 pt-0 sm:ml-64 bg-white dark:bg-zinc-900">
             <Navbar />
@@ -47,7 +43,7 @@ export default function Grafik() {
                 </div>
                 <div className="flex header py-2 px-4 body-light justify-between items-center border-b bg-white">
                     <div className='flex body-bold text-2xl'>
-                        Grafik
+                        Riwayat
                     </div>
                     <div className="flex justify-center items-center text-4xl">
                         <DropdownMenu>
@@ -75,25 +71,27 @@ export default function Grafik() {
             </div>
 
             <div className="page flex items-center justify-between p-4">
-                <div className="flex flex-col justify-between items-center w-full h-full">
-                    <div className="flex flex-col lg:flex-row justify-between items-center w-full h-full">
-                        <div className='mr-2 w-full h-full'>
-                            <GrafikKeseluruhan />
+                <div className="flex flex-col justify-between items-center w-full">
+                    <RiwayatTable></RiwayatTable>
+
+                    <div className='flex w-full justify-between mt-10'>
+                        <div className='w-full mr-2 h-full'>
+                            <p className='navbar-title mb-2'>
+                                GRAFIK KESELURUHAN
+                            </p>
+                            <GrafikKeseluruhan/>
                         </div>
-                        <div className='ml-2 w-full h-full'>
-                            <GrafikAmonia />
-                        </div>
-                    </div>
-                    <div className="flex flex-col lg:flex-row justify-between items-center w-full h-full mt-4">
-                        <div className='mr-2 w-full h-full'>
-                            <GrafikSuhu />
-                        </div>
-                        <div className='ml-2 w-full h-full'>
-                            <GrafikKelembapan />
+                        <div className='w-full ml-2'>
+                            <p className='navbar-title mb-2'>
+                                AKTIVITAS
+                            </p>
+                            <Aktivitas/>
                         </div>
                     </div>
                 </div>
             </div>
+
+
 
         </main>
     );
