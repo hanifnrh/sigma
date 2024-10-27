@@ -53,8 +53,8 @@ const Navbar: React.FC = () => {
                             <Image src="/sigmalogo.png" alt="Logo" width={256} height={256} className="h-16 md:h-12 xl:h-16 w-auto mt-8 sm:mt-0" />
                         </Link>
                         {/* Menu Items */}
-                        <ul className="space-y-2 font-medium">
-                            <p className='body-bold navbar-title text-sm sm:text-xs mb-2'>
+                        <ul className="space-y-2 font-medium mt-5 sm:mt-0">
+                            <p className='body-bold navbar-title text-xs mb-2'>
                                 MAIN MENU
                             </p>
                             <li>
@@ -104,7 +104,7 @@ const Navbar: React.FC = () => {
                             </li>
                         </ul>
                         <ul className="pt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
-                            <p className='body-bold navbar-title text-sm sm:text-xs mb-2'>
+                            <p className='body-bold navbar-title text-xs mb-2'>
                                 BANTUAN
                             </p>
                             <li>
@@ -135,7 +135,7 @@ const Navbar: React.FC = () => {
                                 </Link>
                             </li>
                         </ul>
-                        <div className="status-container w-full relative">
+                        <div className="status-container w-full relative mt-5 sm:mt-0">
                             <div className='bg-purple-400 rounded-xl h-16 w-full flex items-center'>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="120" height="93" viewBox="0 0 120 93" fill="none" className='absolute top-0 left-0'>
                                     <circle opacity="0.2" cx="60.7009" cy="60.7009" r="60.7009" transform="matrix(0.996195 0.0871557 0.0871557 -0.996195 -74.1056 81.7822)" fill="url(#paint0_linear_58_5)" />
