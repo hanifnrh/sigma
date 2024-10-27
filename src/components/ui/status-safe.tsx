@@ -19,7 +19,7 @@ const StatusSafe = ({
     return (
         <div
             className={cn(
-                "relative flex items-center gap-x-2.5 rounded-lg border bg-popover px-6 py-3 cursor-pointer",
+                "relative flex items-center gap-x-2.5 bg-popover px-6 py-3 cursor-pointer",
                 className,
             )}
         >

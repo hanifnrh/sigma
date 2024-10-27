@@ -7,7 +7,7 @@ const AreaChart = ({ id, color }) => {
     useEffect(() => {
         const options = {
             chart: {
-                height: "100%",
+                maxHeight: "100%",
                 maxWidth: "100%",
                 type: "area",
                 fontFamily: "Inter, sans-serif",

@@ -2,11 +2,10 @@ import BatteryGauge from 'react-battery-gauge';
 
 export function SensorBattery() {
     return (
-        <div>
-            <div className='flex flex-col justify-center items-start mt-5'>
+        <div className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-1 gap-4 mt-5">
+            <div className='flex flex-col justify-center items-start'>
                 <div className='body-light'>
-                    Suhu & Kelembapan
-                    DHT 22 (1)
+                    Suhu & Kelembapan DHT 22 (1)
                 </div>
                 <div>
                     <BatteryGauge
@@ -55,10 +54,10 @@ export function SensorBattery() {
                     />
                 </div>
             </div>
-            <div className='flex flex-col justify-center items-start mt-5'>
+
+            <div className='flex flex-col justify-center items-start'>
                 <div className='body-light'>
-                    Suhu & Kelembapan
-                    DHT 22 (2)
+                    Suhu & Kelembapan DHT 22 (2)
                 </div>
                 <div>
                     <BatteryGauge
@@ -107,10 +106,10 @@ export function SensorBattery() {
                     />
                 </div>
             </div>
-            <div className='flex flex-col justify-center items-start mt-5'>
+
+            <div className='flex flex-col justify-center items-start'>
                 <div className='body-light'>
-                    Suhu & Kelembapan
-                    DHT 22 (3)
+                    Suhu & Kelembapan DHT 22 (3)
                 </div>
                 <div>
                     <BatteryGauge
@@ -159,10 +158,10 @@ export function SensorBattery() {
                     />
                 </div>
             </div>
-            <div className='flex flex-col justify-center items-start mt-5'>
+
+            <div className='flex flex-col justify-center items-start'>
                 <div className='body-light'>
-                    Suhu & Kelembapan
-                    DHT 22 (4)
+                    Suhu & Kelembapan DHT 22 (4)
                 </div>
                 <div>
                     <BatteryGauge
@@ -211,10 +210,10 @@ export function SensorBattery() {
                     />
                 </div>
             </div>
-            <div className='flex flex-col justify-center items-start mt-5'>
+
+            <div className='flex flex-col justify-center items-start'>
                 <div className='body-light'>
-                    Amonia DFRobot
-                    MEMS NH3 (1)
+                    Amonia DFRobot MEMS NH3 (1)
                 </div>
                 <div>
                     <BatteryGauge
@@ -263,10 +262,10 @@ export function SensorBattery() {
                     />
                 </div>
             </div>
-            <div className='flex flex-col justify-center items-start mt-5'>
+
+            <div className='flex flex-col justify-center items-start'>
                 <div className='body-light'>
-                    Amonia DFRobot
-                    MEMS NH3 (2)
+                    Amonia DFRobot MEMS NH3 (2)
                 </div>
                 <div>
                     <BatteryGauge
@@ -316,5 +315,5 @@ export function SensorBattery() {
                 </div>
             </div>
         </div>
-    )
+    );
 }
