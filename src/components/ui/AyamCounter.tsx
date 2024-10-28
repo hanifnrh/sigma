@@ -41,12 +41,12 @@ const AyamCounter: React.FC = () => {
                     <FaMinus />
                 </button>
             </div>
-            <div className="w-full flex items-center justify-between mt-10">
+            <div className="w-full flex md:flex-row flex-col items-center justify-between mt-10">
                 <Input type="number" placeholder="Masukkan jumlah ayam" value={initialCount}
-                    onChange={handleInitialCountChange} className="mr-2" />
+                    onChange={handleInitialCountChange} className="md:mr-2" />
                 <button
                     onClick={handleReset}
-                    className="bg-blue-700 text-white rounded-lg ml-2 w-48 p-2"
+                    className="bg-blue-700 text-white rounded-lg md:ml-2 p-2 mt-5 md:mt-0 w-full md:w-48"
                 >
                     Isi jumlah ayam
                 </button>

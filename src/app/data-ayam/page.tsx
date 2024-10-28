@@ -78,8 +78,8 @@ export default function DataAyam() {
 
                 <div className="page flex items-center justify-between p-4 w-full">
                     <div className="flex flex-col justify-between items-center w-full">
-                        <div className='grid grid-cols-1 lg:grid-cols-2 gap-10'>
-                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-10'>
+                        <div className='grid grid-cols-1 lg:grid-cols-2 gap-x-24 gap-y-10 w-full'>
+                            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-y-4'>
                                 <div className='flex flex-col justify-center sm:justify-start sm:items-start items-center'>
                                     <Button variant={"mulaiTernak"}>
                                         <div className='h-full px-4 py-4 flex justify-center items-center text-xl'>
@@ -103,11 +103,13 @@ export default function DataAyam() {
                                     </p>
                                 </div>
                             </div>
-                            <Button variant={"jumlahAyam"}>
-                                <div className='text-xl'>
-                                    Jumlah ayam awal: 12.500
-                                </div>
-                            </Button>
+                            <div className='flex w-full justify-center lg:justify-end'>
+                                <Button variant={"jumlahAyam"} className='w-full lg:w-72'>
+                                    <div className='text-xl'>
+                                        Jumlah ayam awal: 12.500
+                                    </div>
+                                </Button>
+                            </div>
                         </div>
 
                         <div className='w-full grid grid-cols-1 lg:grid-cols-3 gap-4 mt-10'>
