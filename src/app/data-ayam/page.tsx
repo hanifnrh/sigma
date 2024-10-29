@@ -11,12 +11,13 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import GrafikMortalitas from '@/components/ui/GrafikMortalitas';
-import JumlahAyam from '@/components/ui/JumlahAyam';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import MortalitasAyam from '@/components/ui/MortalitasAyam';
 import UsiaAyam from '@/components/ui/UsiaAyam';
 import dynamic from 'next/dynamic';
+import { useState } from "react";
 import { FaPlay, FaStop } from "react-icons/fa";
+import { GiRooster } from "react-icons/gi";
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
@@ -26,6 +27,14 @@ import Navbar from "../navbar";
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 
 export default function DataAyam() {
+
+    const [jumlahAyam, setJumlahAyam] = useState<number>(12500); // Jumlah ayam awal
+
+    // Fungsi untuk mengupdate jumlah ayam (dikirim ke AyamCounter sebagai prop)
+    const updateJumlahAyam = (jumlahAyamBaru: number) => {
+        setJumlahAyam(jumlahAyamBaru);
+    };
+
     return (
         <main className="w-full bg-white dark:bg-zinc-900 relative">
             <Navbar />
@@ -83,7 +92,7 @@ export default function DataAyam() {
                                 <div className='flex flex-col justify-center sm:justify-start sm:items-start items-center'>
                                     <Button variant={"mulaiTernak"}>
                                         <div className='h-full px-4 py-4 flex justify-center items-center text-xl'>
-                                            <FaPlay className='' />
+                                            <FaPlay className='mr-2' />
                                             Mulai Ternak
                                         </div>
                                     </Button>
@@ -94,7 +103,7 @@ export default function DataAyam() {
                                 <div className='flex flex-col justify-center sm:justify-start sm:items-end lg:items-start items-center'>
                                     <Button variant={"panen"}>
                                         <div className='h-full px-4 py-4 flex justify-center items-center text-xl'>
-                                            <FaStop className='' />
+                                            <FaStop className='mr-2' />
                                             Panen
                                         </div>
                                     </Button>
@@ -123,7 +132,23 @@ export default function DataAyam() {
                                 <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     JUMLAH AYAM
                                 </div>
-                                <JumlahAyam />
+                                <div className="flex justify-between items-center">
+                                    <div className="w-full flex">
+                                        <div className="relative flex flex-grow !flex-row flex-col items-center justify-center rounded-[10px] rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
+                                            <div className="flex h-[90px] w-auto flex-row items-center">
+                                                <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
+                                                    <span className="flex items-center text-brand-500 dark:text-white">
+                                                        <GiRooster size={50} />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="h-50 ml-4 flex w-auto flex-col justify-center">
+                                                <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Jumlah Ayam</p>
+                                                <h4 className="text-4xl body-bold text-green-500 dark:text-green-700"> {jumlahAyam}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
@@ -145,7 +170,7 @@ export default function DataAyam() {
                                     KENDALI JUMLAH AYAM
                                 </p>
                                 <div className='border rounded-lg'>
-                                    <AyamCounter></AyamCounter>
+                                    <AyamCounter jumlahAyam={jumlahAyam} onUpdateJumlahAyam={updateJumlahAyam}></AyamCounter>
                                 </div>
                             </div>
                         </div>

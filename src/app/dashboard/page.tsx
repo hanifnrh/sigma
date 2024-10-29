@@ -1,7 +1,13 @@
-// page.tsx
-
-"use client";
+"use client"
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { SensorBattery } from '@/components/ui/SensorBattery';
@@ -12,6 +18,7 @@ import StatusGood from '@/components/ui/status-good';
 import StatusSafe from '@/components/ui/status-safe';
 import StatusWarning from '@/components/ui/status-warning';
 import dynamic from 'next/dynamic';
+import { useState } from "react";
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
@@ -19,8 +26,26 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
+type Notification = {
+    parameter: string;
+    status: string;
+    timestamp: Date;
+    message: string;
+    icon: React.ReactNode;
+};
 
 export default function Dashboard() {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+
+    const handleNewNotification = (notif: Notification) => {
+        const exists = notifications.some(
+            (n) => n.parameter === notif.parameter && n.status === notif.status
+        );
+        if (!exists) {
+            setNotifications((prev) => [...prev, notif]); // Just add the notification as is
+        }
+    };
+
     return (
         <main className="bg-white dark:bg-zinc-900 w-full">
             <Navbar />
@@ -28,16 +53,43 @@ export default function Dashboard() {
                 <div className="sticky top-10 sm:top-0 z-10">
                     <div className="flex header w-full py-2 px-4 body-light justify-between items-center border-b bg-white">
                         <div className='flex items-center navbar-title body-light'>
-                            <GrMapLocation className='text-xl'/>
+                            <GrMapLocation className='text-xl' />
                             <span className='ml-2 dark:text-white text-xs sm:text-sm'>
                                 Lokasi: Jl. Coba No. 30, Musuk, Boyolali, Jawa Tengah
                             </span>
                         </div>
-                        <div className="flex justify-center items-center text-4xl">
-                            <div className='flex justify-center items-center pr-3'>
-                                <IoIosNotificationsOutline className="dark:text-white mr-4 cursor-pointer text-xl sm:text-2xl" />
-                                <ModeToggle />
+                        <div className="flex justify-center items-center text-4xl relative">
+                            <div className="relative mr-4">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger className='p-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
+                                        <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.parameter}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
+                                        {/* Notification Badge */}
+                                        {notifications.length > 0 && (
+                                            <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                                        )}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className='body-light w-72'>
+                                        <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {notifications.map((notif, index) => (
+                                            <DropdownMenuItem key={index} className='flex justify-center items-center border-b'>
+                                                <div className='mx-2'>
+                                                    {notif.icon}
+                                                </div>
+                                                <div className='flex flex-col items-start w-full'>
+                                                    <div>
+                                                        {notif.parameter}: <span className='text-red-500 body-bold'>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
+                                                    </div>
+                                                    <div>
+                                                        {notif.message}
+                                                    </div>
+                                                </div>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
+                            <ModeToggle />
                             <img src="/profile.png" alt="Profile Picture" className='border-l ml-3 pl-5' />
                             <RiArrowDropDownLine className="dark:text-white mx-1" />
                         </div>
@@ -82,8 +134,6 @@ export default function Dashboard() {
                                 <div className="status flex items-center justify-center rounded-lg border ">
                                     <StatusGood className='text-blue-500' />
                                 </div>
-
-
                                 <div className="status flex items-center justify-center rounded-lg border ">
                                     <StatusWarning className='text-yellow-500' />
                                 </div>
@@ -93,35 +143,33 @@ export default function Dashboard() {
 
                             </div>
                         </div>
-                        <StatsWidget />
+                        <StatsWidget onNewNotification={handleNewNotification} />
                         <div className='grid grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-8 w-full p-4 justify-between'>
                             <div className='w-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     PERANGKAT
                                 </p>
-                                <SensorStatus></SensorStatus>
+                                <SensorStatus />
                             </div>
                             <div className='w-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     GRAFIK KESELURUHAN
                                 </p>
-                                <GrafikKeseluruhan></GrafikKeseluruhan>
+                                <GrafikKeseluruhan />
                             </div>
                         </div>
                     </div>
-
 
                     <div className="container-right flex flex-col items-start justify-center px-5 py-5 h-full lg:mt-0 mt-10">
                         <div className='navbar-title body-bold text-sm sm:text-xs '>
                             DAYA PERANGKAT
                         </div>
                         <div>
-                            <SensorBattery></SensorBattery>
+                            <SensorBattery />
                         </div>
                     </div>
                 </div>
             </div>
-
         </main>
     );
 }
