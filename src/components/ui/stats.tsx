@@ -14,6 +14,7 @@ type Notification = {
 
 type StatsWidgetProps = {
     onNewNotification: (notif: Notification) => void;
+    onDataUpdate: (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => void;
 };
 
 const THRESHOLDS = {
@@ -22,7 +23,7 @@ const THRESHOLDS = {
     humidity: { min: 40, max: 60 },
 };
 
-const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification }) => {
+const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpdate }) => {
     const [ammonia, setAmmonia] = useState(20);
     const [temperature, setTemperature] = useState(24);
     const [humidity, setHumidity] = useState(62);
@@ -127,6 +128,12 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification }) => {
 
         setStatus(updatedStatus);
         setWarnings(updatedWarnings);
+
+        onDataUpdate([
+            { Parameter: "Amonia", Value: `${ammonia} ppm`, Status: updatedStatus.ammonia.text, Timestamp: new Date()  },
+            { Parameter: "Suhu", Value: `${temperature} °C`, Status: updatedStatus.temperature.text, Timestamp: new Date()  },
+            { Parameter: "Kelembapan", Value: `${humidity}%`, Status: updatedStatus.humidity.text, Timestamp: new Date()  },
+        ]);
     }, [ammonia, temperature, humidity]);
 
     return (
@@ -149,7 +156,7 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification }) => {
                             </div>
                             <div className="ml-4 flex flex-col justify-center">
                                 <p className="font-dm text-xl font-medium text-gray-600 dark:text-white">{label}</p>
-                                <h4 className={`text-3xl ${status.color}`}>{value}</h4>
+                                <h4 className={`text-3xl body-bold ${status.color}`}>{value}</h4>
                             </div>
                         </div>
                         {warning && <p className={`${status.color} text-sm text-center`}>{warning}</p>}

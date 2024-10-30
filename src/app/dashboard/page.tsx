@@ -23,6 +23,7 @@ import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
+import { utils, writeFile } from "xlsx";
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
@@ -36,6 +37,7 @@ type Notification = {
 
 export default function Dashboard() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date}>>([]);
 
     const handleNewNotification = (notif: Notification) => {
         const exists = notifications.some(
@@ -45,6 +47,19 @@ export default function Dashboard() {
             setNotifications((prev) => [...prev, notif]); // Just add the notification as is
         }
     };
+
+
+    const handleDownload = () => {
+        const ws = utils.json_to_sheet(statsData);
+        const wb = utils.book_new();
+        utils.book_append_sheet(wb, ws, "StatsData");
+        writeFile(wb, "Dashboard.xlsx");
+    };
+
+    const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date}>) => {
+        setStatsData(data);
+    };
+
 
     return (
         <main className="bg-white dark:bg-zinc-900 w-full">
@@ -91,7 +106,7 @@ export default function Dashboard() {
                             </div>
                             <ModeToggle />
                             <img src="/profile.png" alt="Profile Picture" className='border-l ml-3 pl-5' />
-                            <RiArrowDropDownLine className="dark:text-white mx-1" />
+                                <RiArrowDropDownLine className="dark:text-white mx-1" />
                         </div>
                     </div>
                     <div className="flex header py-2 px-4 body-light justify-between items-center border-b bg-white">
@@ -99,7 +114,7 @@ export default function Dashboard() {
                             Dasbor
                         </div>
                         <div className="flex justify-center items-center text-4xl">
-                            <Button variant={"green"}>
+                            <Button variant={"green"} onClick={handleDownload}>
                                 <MdOutlineFileDownload className='text-4xl pr-2' />
                                 Unduh data
                             </Button>
@@ -143,7 +158,7 @@ export default function Dashboard() {
 
                             </div>
                         </div>
-                        <StatsWidget onNewNotification={handleNewNotification} />
+                        <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} />
                         <div className='grid grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-8 w-full p-4 justify-between'>
                             <div className='w-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
