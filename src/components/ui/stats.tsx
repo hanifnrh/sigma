@@ -23,8 +23,8 @@ const THRESHOLDS = {
 };
 
 const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification }) => {
-    const [ammonia, setAmmonia] = useState(30);
-    const [temperature, setTemperature] = useState(34);
+    const [ammonia, setAmmonia] = useState(20);
+    const [temperature, setTemperature] = useState(24);
     const [humidity, setHumidity] = useState(62);
 
     const [status, setStatus] = useState({
@@ -152,7 +152,7 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification }) => {
                                 <h4 className={`text-3xl ${status.color}`}>{value}</h4>
                             </div>
                         </div>
-                        {warning && <p className="text-red-500 text-sm text-center">{warning}</p>}
+                        {warning && <p className={`${status.color} text-sm text-center`}>{warning}</p>}
                     </div>
                 ))}
             </div>
