@@ -33,6 +33,7 @@ type Notification = {
     timestamp: Date;
     message: string;
     icon: React.ReactNode;
+    color: string;
 };
 
 export default function Dashboard() {
@@ -93,7 +94,7 @@ export default function Dashboard() {
                                                 </div>
                                                 <div className='flex flex-col items-start w-full'>
                                                     <div>
-                                                        {notif.parameter}: <span className='text-red-500 body-bold'>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
+                                                        {notif.parameter}: <span className={`${notif.color} body-bold`}>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
                                                     </div>
                                                     <div>
                                                         {notif.message}

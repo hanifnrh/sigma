@@ -10,6 +10,7 @@ type Notification = {
     timestamp: Date;
     message: string;
     icon: React.ReactNode;
+    color: string;
 };
 
 type StatsWidgetProps = {
@@ -57,7 +58,8 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
                 status: "Bahaya",
                 timestamp: new Date(),
                 message: "Segera bersihkan kandang!",
-                icon: <TbAtom2Filled />
+                icon: <TbAtom2Filled />,
+                color: updatedStatus.ammonia.color,
             });
         } else {
             updatedStatus.ammonia = { text: "Sangat Baik", color: "text-green-500" };
@@ -73,7 +75,8 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
                 status: "Buruk",
                 timestamp: new Date(),
                 message: "Segera nyalakan lampu dan hangatkan kandang!",
-                icon: <FaTemperatureLow />
+                icon: <FaTemperatureLow />,
+                color: updatedStatus.temperature.color,
             });
         } else if (temperature > THRESHOLDS.temperature.max) {
             updatedStatus.temperature = { text: "Bahaya", color: "text-red-500" };
@@ -83,7 +86,8 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
                 status: "Bahaya",
                 timestamp: new Date(),
                 message: "Segera matikan lampu dan dinginkan kandang!",
-                icon: <FaTemperatureHigh />
+                icon: <FaTemperatureHigh />,
+                color: updatedStatus.temperature.color,
             });
         } else {
             updatedStatus.temperature = { text: "Baik", color: "text-blue-500" };
@@ -99,7 +103,8 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
                 status: "Buruk",
                 timestamp: new Date(),
                 message: "Segera atur ventilasi kandang!",
-                icon: <IoWater />
+                icon: <IoWater />,
+                color: updatedStatus.humidity.color,
             });
         } else if (humidity > THRESHOLDS.humidity.max) {
             updatedStatus.humidity = { text: "Bahaya", color: "text-red-500" };
@@ -109,7 +114,8 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
                 status: "Bahaya",
                 timestamp: new Date(),
                 message: "Segera atur ventilasi kandang!",
-                icon: <IoWater />
+                icon: <IoWater />,
+                color: updatedStatus.humidity.color,
             });
         } else {
             updatedStatus.humidity = { text: "Baik", color: "text-blue-500" };
