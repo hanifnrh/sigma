@@ -3,7 +3,7 @@ const MortalitasAyam = () => {
     return (
         <div className="flex justify-between items-center">
             <div className="w-full flex">
-                <div className="relative flex flex-grow !flex-row flex-col items-center justify-center rounded-[10px] rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
+                <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
                     <div className="flex h-[90px] w-auto flex-row items-center">
                         <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
                             <span className="flex items-center text-brand-500 dark:text-white">
