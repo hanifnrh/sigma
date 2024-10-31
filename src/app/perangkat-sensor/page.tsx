@@ -1,12 +1,5 @@
 "use client";
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { SensorBattery2 } from '@/components/ui/SensorBattery2';
 import { SensorStatus } from '@/components/ui/SensorStatus';
@@ -47,23 +40,7 @@ export default function PerangkatSensor() {
                         <div className='flex body-bold text-2xl w-32 lg:w-56'>
                             Perangkat Sensor
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-4xl">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger className='border p-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
-                                    30 menit
-                                    <RiArrowDropDownLine className="dark:text-white text-center text-2xl" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className='body-light'>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>30 Menit</DropdownMenuItem>
-                                    <DropdownMenuItem>1 Jam</DropdownMenuItem>
-                                    <DropdownMenuItem>1 Hari</DropdownMenuItem>
-                                    <DropdownMenuItem>1 Minggu</DropdownMenuItem>
-                                    <DropdownMenuItem>1 Bulan</DropdownMenuItem>
-                                    <DropdownMenuItem>1 Kelompok</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
+                        <div className="flex justify-center items-center text-4xl">
                             <Button variant={"green"}>
                                 <MdOutlineFileDownload className='text-4xl pr-2' />
                                 Unduh data

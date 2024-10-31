@@ -1,6 +1,7 @@
 "use client";
 import { Button } from '@/components/ui/button';
 import Dynamic from '@/components/ui/Dynamic';
+import StatsWidget from '@/components/ui/stats';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,12 +15,52 @@ import { LuBook } from "react-icons/lu";
 import { MdAutoGraph, MdOutlineSensors } from "react-icons/md";
 import { RxDashboard } from "react-icons/rx";
 
+type Notification = {
+    parameter: string;
+    status: string;
+    timestamp: Date;
+    message: string;
+    icon: React.ReactNode;
+    color: string;
+};
+
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const currentPath = usePathname();
+    const [overallStatus, setOverallStatus] = useState({ text: "Baik" });
+    const getStatusColor = (statusText: string) => {
+        switch (statusText) {
+            case "Sangat Baik":
+                return "bg-customGreen";
+            case "Baik":
+                return "bg-blue-500";
+            case "Buruk":
+                return "bg-yellow-400";
+            case "Bahaya":
+                return "bg-customRed";
+            default:
+                return "";
+        }
+    };
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
 
+    const handleNewNotification = (notif: Notification) => {
+        const exists = notifications.some(
+            (n) => n.parameter === notif.parameter && n.status === notif.status
+        );
+        if (!exists) {
+            setNotifications((prev) => [...prev, notif]); // Just add the notification as is
+        }
+    };
+    const handleOverallStatusChange = (status: { text: string }) => {
+        setOverallStatus(status);
+    };
     const toggleNavbar = () => {
         setIsOpen(!isOpen);
+    };
+    const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
+        setStatsData(data);
     };
 
     return (
@@ -27,7 +68,7 @@ const Navbar: React.FC = () => {
             <div className="fixed top-0 z-50 w-full bg-white dark:bg-gray-800 transition-colors">
                 <button
                     onClick={toggleNavbar}
-                    className="p-2 text-gray-900 rounded-lg sm:hidden dark:text-white z-50 bg-white w-full border-b relative"
+                    className="p-2 text-gray-900 sm:hidden dark:text-white z-50 bg-white w-full border-b relative"
                     aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}
                 >
                     {/* Mengganti ikon berdasarkan status */}
@@ -136,7 +177,7 @@ const Navbar: React.FC = () => {
                             </li>
                         </ul>
                         <div className="status-container w-full relative mt-5 sm:mt-0">
-                            <div className='bg-purple-400 rounded-xl h-16 w-full flex items-center'>
+                            <div className={`${getStatusColor(overallStatus.text)} rounded-xl h-16 w-full flex items-center`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="120" height="93" viewBox="0 0 120 93" fill="none" className='absolute top-0 left-0'>
                                     <circle opacity="0.2" cx="60.7009" cy="60.7009" r="60.7009" transform="matrix(0.996195 0.0871557 0.0871557 -0.996195 -74.1056 81.7822)" fill="url(#paint0_linear_58_5)" />
                                     <circle opacity="0.2" cx="60.7009" cy="60.7009" r="60.7009" transform="matrix(0.996195 0.0871557 0.0871557 -0.996195 -11.7125 48.972)" fill="url(#paint1_linear_58_5)" />
@@ -152,8 +193,8 @@ const Navbar: React.FC = () => {
                                     </defs>
                                 </svg>
                                 <div className='flex w-full items-center justify-between px-8'>
-                                    <p className='text-white text-center body-bold text-xl'>
-                                        Status: Baik
+                                    <p className='text-white text-start body-bold text-xl'>
+                                        Status: {overallStatus.text}
                                     </p>
                                     <Dynamic></Dynamic>
                                 </div>
@@ -163,7 +204,9 @@ const Navbar: React.FC = () => {
                         </div>
                     </div>
                 </aside>
-
+                <div className='hidden'>
+                    <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} onOverallStatusChange={handleOverallStatusChange} />
+                </div>
             </div>
         </div>
     );
