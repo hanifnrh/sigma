@@ -253,13 +253,14 @@ export default function DataAyam() {
                                                         />
 
                                                         <Button
+                                                            variant={'blue'}
                                                             onClick={() => {
                                                                 // Ensure to pass the updated targetTanggal
                                                                 handleStartFarming(jumlahAyamInput, targetTanggal);
                                                                 setDialogOpen(false);
                                                             }}
                                                             type='submit'
-                                                            disabled={!targetTanggal} // Optional: Disable if no date is selected
+                                                            disabled={!targetTanggal || jumlahAyamInput <= 0}
                                                         >
                                                             Mulai
                                                         </Button>
@@ -298,7 +299,7 @@ export default function DataAyam() {
                                                     Aksi tidak dapat dibatalkan jika sudah dilakukan
                                                 </DialogDescription>
                                             </DialogHeader>
-                                            <Button variant={"green"} onClick={() => {
+                                            <Button variant={"blue"} onClick={() => {
                                                 handleHarvest();
                                                 setHarvestDialogOpen(false); // Tutup dialog
                                             }} type="submit" disabled={!farmingStarted}>
@@ -322,8 +323,8 @@ export default function DataAyam() {
                                                 Tanggal panen belum tiba. Apakah Anda yakin ingin panen?
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <div className="flex justify-between">
-                                            <Button variant={"green"} onClick={confirmHarvest} type="submit">
+                                        <div className="flex justify-between items-center">
+                                            <Button variant={"blue"} onClick={confirmHarvest} type="submit">
                                                 Ya, Panen
                                             </Button>
                                         </div>
