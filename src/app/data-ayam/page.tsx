@@ -1,4 +1,3 @@
-// page.tsx
 
 "use client";
 import AyamCounter from '@/components/ui/AyamCounter';
@@ -16,13 +15,15 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import GrafikMortalitas from '@/components/ui/GrafikMortalitas';
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import MortalitasAyam from '@/components/ui/MortalitasAyam';
+import StatsWidget from '@/components/ui/stats';
 import UsiaAyam from '@/components/ui/UsiaAyam';
 import dynamic from 'next/dynamic';
 import { useState } from "react";
@@ -35,15 +36,42 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
+type Notification = {
+    parameter: string;
+    status: string;
+    timestamp: Date;
+    message: string;
+    icon: React.ReactNode;
+    color: string;
+};
 
 export default function DataAyam() {
     const [date, setDate] = useState<Date | null>(null);
     const [jumlahAyam, setJumlahAyam] = useState<number>(0);
+    const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
     const [targetTanggal, setTargetTanggal] = useState<Date | null>(null);
     const [countdown, setCountdown] = useState<string>('');
     const [harvested, setHarvested] = useState(false);
     const [showConfirmHarvestDialog, setShowConfirmHarvestDialog] = useState(false);
     const [farmingStarted, setFarmingStarted] = useState(false);
+
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+
+    const handleNewNotification = (notif: Notification) => {
+        const exists = notifications.some(
+            (n) => n.parameter === notif.parameter && n.status === notif.status
+        );
+        if (!exists) {
+            setNotifications((prev) => [...prev, notif]); // Just add the notification as is
+        }
+    };
+
+    const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
+        setStatsData(data);
+    };
 
     function handleStartFarming(initialCount: number, targetDate: Date | null) {
         if (!targetDate) {
@@ -64,7 +92,8 @@ export default function DataAyam() {
         setJumlahAyam(initialCount);
         setTargetTanggal(target);
         setCountdown(`Tersisa ${timeDiff} hari untuk panen`);
-        setFarmingStarted(true); // Set farming as started
+        setFarmingStarted(true);
+        setDialogOpen(false);
 
         // Set up a countdown timer
         let countdownInterval = setInterval(() => {
@@ -100,6 +129,7 @@ export default function DataAyam() {
         setHarvested(true);
         setShowConfirmHarvestDialog(false); // Close dialog after confirming
         setFarmingStarted(false); // Reset farming state after harvest
+        setHarvestDialogOpen(false);
     };
 
     // Fungsi untuk mengupdate jumlah ayam (dikirim ke AyamCounter sebagai prop)
@@ -119,18 +149,45 @@ export default function DataAyam() {
                                 Lokasi: Jl. Coba No. 30, Musuk, Boyolali, Jawa Tengah
                             </span>
                         </div>
-                        <div className="flex justify-center items-center text-4xl">
-                            <div className='flex justify-center items-center pr-3'>
-                                <IoIosNotificationsOutline className="dark:text-white mr-4 cursor-pointer text-xl sm:text-2xl" />
-                                <ModeToggle />
+                        <div className="flex justify-center items-center text-4xl relative">
+                            <div className="relative mr-4">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger className='p-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
+                                        <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.parameter}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
+                                        {/* Notification Badge */}
+                                        {notifications.length > 0 && (
+                                            <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                                        )}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className='body-light w-72'>
+                                        <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {notifications.map((notif, index) => (
+                                            <DropdownMenuItem key={index} className='flex justify-center items-center border-b'>
+                                                <div className='mx-2'>
+                                                    {notif.icon}
+                                                </div>
+                                                <div className='flex flex-col items-start w-full'>
+                                                    <div>
+                                                        {notif.parameter}: <span className={`${notif.color} body-bold`}>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
+                                                    </div>
+                                                    <div>
+                                                        {notif.message}
+                                                    </div>
+                                                </div>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
+                            <ModeToggle />
                             <img src="/profile.png" alt="Profile Picture" className='border-l ml-3 pl-5' />
                             <RiArrowDropDownLine className="dark:text-white mx-1" />
                         </div>
                     </div>
                     <div className="flex header py-2 px-4 body-light justify-between items-center border-b bg-white">
                         <div className='flex body-bold text-2xl'>
-                            Grafik
+                            Data Ayam
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-4xl">
                             <DropdownMenu>
@@ -158,14 +215,14 @@ export default function DataAyam() {
                 </div>
                 <div className="page flex items-center justify-between p-4 w-full">
                     <div className="flex flex-col justify-between items-center w-full">
-                        <div className='grid grid-cols-1 2xl:grid-cols-2 gap-y-10 w-full'>
-                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-y-4'>
-                                <div className='flex flex-col justify-center sm:justify-start sm:items-start items-center'>
+                        <div className='grid grid-cols-1 xl:grid-cols-2 gap-y-10 w-full'>
+                            <div className='grid grid-cols-2 gap-y-4 w-full xl:w-96'>
+                                <div className='flex flex-col justify-center sm:justify-start sm:items-start items-center w-full xl:w-44 h-full'>
                                     <div className='h-full flex justify-center items-center text-xl'>
-                                        <Dialog>
+                                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                             <DialogTrigger disabled={farmingStarted}>
-                                                <div className='inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
-                                                    <div className={`flex items-center justify-center text-white ${farmingStarted ? 'bg-customGreen opacity-50' : 'bg-customGreen'} mulaiTernak h-full px-4 py-2 rounded-lg text-xl`}>
+                                                <div onClick={() => setDialogOpen(true)} className='inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
+                                                    <div className={`flex items-center justify-center text-white ${farmingStarted ? 'bg-customGreen opacity-50' : 'bg-customGreen'} mulaiTernak h-full px-4 py-2 rounded-lg text-sm sm:text-xl`}>
                                                         <FaPlay className='mr-2' />
                                                         Mulai Ternak
                                                     </div>
@@ -182,8 +239,8 @@ export default function DataAyam() {
                                                         <label className="block mb-2">Jumlah Ayam Awal:</label>
                                                         <Input
                                                             type="number"
-                                                            value={jumlahAyam}
-                                                            onChange={(e) => setJumlahAyam(parseInt(e.target.value))}
+                                                            value={jumlahAyamInput}
+                                                            onChange={(e) => setJumlahAyamInput(parseInt(e.target.value))}
                                                         />
                                                     </div>
                                                     <div>
@@ -198,7 +255,8 @@ export default function DataAyam() {
                                                         <Button
                                                             onClick={() => {
                                                                 // Ensure to pass the updated targetTanggal
-                                                                handleStartFarming(jumlahAyam, targetTanggal);
+                                                                handleStartFarming(jumlahAyamInput, targetTanggal);
+                                                                setDialogOpen(false);
                                                             }}
                                                             type='submit'
                                                             disabled={!targetTanggal} // Optional: Disable if no date is selected
@@ -217,17 +275,17 @@ export default function DataAyam() {
                                         </Dialog>
                                     </div>
                                     {farmingStarted && (
-                                        <p className="text-green-500 mt-2">Ternak telah dimulai</p>
+                                        <p className="text-green-500 mt-2 text-sm sm:text-md text-center">Ternak telah dimulai</p>
                                     )}
                                     {!farmingStarted && (
-                                        <p className="text-black mt-2">Ternak belum dimulai</p>
+                                        <p className="text-black mt-2 text-sm sm:text-md text-center">Ternak belum dimulai</p>
                                     )}
                                 </div>
-                                <div className='flex flex-col justify-center sm:justify-start sm:items-end 2xl:items-start items-center'>
-                                    <Dialog>
+                                <div className='flex flex-col justify-start sm:items-end 2xl:items-start items-center w-full xl:w-44 h-full'>
+                                    <Dialog open={harvestDialogOpen} onOpenChange={setHarvestDialogOpen}>
                                         <DialogTrigger disabled={!farmingStarted} >
                                             <div className='inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
-                                                <div className={`flex items-center justify-center text-white ${farmingStarted ? 'bg-customRed' : 'bg-customRed opacity-50'} panen h-full px-4 py-2 rounded-lg text-xl`} >
+                                                <div onClick={() => setHarvestDialogOpen(true)} className={`flex items-center justify-center text-white ${farmingStarted ? 'bg-customRed' : 'bg-customRed opacity-50'} panen h-full px-4 py-2 rounded-lg text-sm sm:text-xl`} >
                                                     <FaStop className='mr-2' />
                                                     Panen
                                                 </div>
@@ -240,7 +298,10 @@ export default function DataAyam() {
                                                     Aksi tidak dapat dibatalkan jika sudah dilakukan
                                                 </DialogDescription>
                                             </DialogHeader>
-                                            <Button variant={"green"} onClick={handleHarvest} type="submit" disabled={!farmingStarted}>
+                                            <Button variant={"green"} onClick={() => {
+                                                handleHarvest();
+                                                setHarvestDialogOpen(false); // Tutup dialog
+                                            }} type="submit" disabled={!farmingStarted}>
                                                 Ya, saya yakin
                                             </Button>
                                             <DialogClose asChild>
@@ -250,7 +311,7 @@ export default function DataAyam() {
                                             </DialogClose>
                                         </DialogContent>
                                     </Dialog>
-                                    {harvested && <p className='mt-2'>Sudah panen.</p>}
+                                    {harvested && <p className='mt-2 text-sm sm:text-md text-center'>Sudah panen.</p>}
                                 </div>
 
                                 <Dialog open={showConfirmHarvestDialog} onOpenChange={setShowConfirmHarvestDialog}>
@@ -274,18 +335,17 @@ export default function DataAyam() {
                                     </DialogContent>
                                 </Dialog>
                             </div>
-                            <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 w-full'>
-                                <div className='flex justify-start items-start'>
-                                    <Button variant={"jumlahAyam"} className='w-full lg:w-72'>
-                                        <div className='text-xl'>
-                                            {countdown && <p>{countdown}</p>}
-                                        </div>
-                                    </Button>
-                                </div>
+                            <div className='flex flex-col sm:flex-row justify-center xl:justify-end items-center sm:items-start w-full'>
+                                {!harvested && countdown && <div className='flex sm:justify-start justify-center items-start w-full lg:w-72 mb-2 sm:mb-0'>
+                                    <div className='text-sm sm:text-xl flex justify-center items-center text-center px-4 py-2'>
+                                        {countdown}
+                                    </div>
+                                </div>}
+
                                 <div className='flex justify-end items-start'>
                                     <Button variant={"jumlahAyam"} className='w-full lg:w-72'>
-                                        <div className='text-xl'>
-                                            Jumlah ayam awal: 12.500
+                                        <div className='text-sm sm:text-xl'>
+                                            Jumlah ayam awal: {jumlahAyam}
                                         </div>
                                     </Button>
                                 </div>
@@ -348,6 +408,9 @@ export default function DataAyam() {
 
                     </div>
                 </div>
+            </div>
+            <div className='hidden'>
+                <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} />
             </div>
         </main>
     );
