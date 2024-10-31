@@ -22,12 +22,11 @@ import {
 import GrafikMortalitas from '@/components/ui/GrafikMortalitas';
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from '@/components/ui/mode-toggle';
-import MortalitasAyam from '@/components/ui/MortalitasAyam';
 import StatsWidget from '@/components/ui/stats';
-import UsiaAyam from '@/components/ui/UsiaAyam';
 import dynamic from 'next/dynamic';
-import { useState } from "react";
-import { FaPlay, FaStop } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { BsHeartPulse } from "react-icons/bs";
+import { FaPlay, FaRegCalendarAlt, FaStop } from "react-icons/fa";
 import { GiRooster } from "react-icons/gi";
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
@@ -47,6 +46,8 @@ type Notification = {
 
 export default function DataAyam() {
     const [date, setDate] = useState<Date | null>(null);
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [ageInDays, setAgeInDays] = useState<number>(0);
     const [jumlahAyam, setJumlahAyam] = useState<number>(0);
     const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
     const [targetTanggal, setTargetTanggal] = useState<Date | null>(null);
@@ -54,11 +55,19 @@ export default function DataAyam() {
     const [harvested, setHarvested] = useState(false);
     const [showConfirmHarvestDialog, setShowConfirmHarvestDialog] = useState(false);
     const [farmingStarted, setFarmingStarted] = useState(false);
-
+    const [jumlahAwalAyam, setJumlahAwalAyam] = useState<number>(0); // Menyimpan jumlah ayam awal
+    const [mortalitas, setMortalitas] = useState<number>(0);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+
+    const updateMortalitas = (ayamMati: number) => {
+        if (jumlahAwalAyam > 0) {
+            const mortalitasPersen = ((ayamMati / jumlahAwalAyam) * 100).toFixed(1); // Persentase mortalitas
+            setMortalitas(parseFloat(mortalitasPersen));
+        }
+    };
 
     const handleNewNotification = (notif: Notification) => {
         const exists = notifications.some(
@@ -68,6 +77,21 @@ export default function DataAyam() {
             setNotifications((prev) => [...prev, notif]); // Just add the notification as is
         }
     };
+
+    const calculateAge = () => {
+        if (startDate) {
+            const now = new Date();
+            const ageInDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            setAgeInDays(ageInDays);
+        }
+    };
+    useEffect(() => {
+        if (farmingStarted) {
+            calculateAge();
+            const ageInterval = setInterval(calculateAge, 1000 * 60 * 60 * 24); // Update setiap hari
+            return () => clearInterval(ageInterval); // Bersihkan interval saat komponen unmount
+        }
+    }, [startDate, farmingStarted]);
 
     const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
         setStatsData(data);
@@ -89,6 +113,7 @@ export default function DataAyam() {
             return;
         }
 
+        setJumlahAwalAyam(initialCount)
         setJumlahAyam(initialCount);
         setTargetTanggal(target);
         setCountdown(`Tersisa ${timeDiff} hari untuk panen`);
@@ -260,6 +285,7 @@ export default function DataAyam() {
                                                                 setDialogOpen(false);
                                                             }}
                                                             type='submit'
+                                                            className='w-full'
                                                             disabled={!targetTanggal || jumlahAyamInput <= 0}
                                                         >
                                                             Mulai
@@ -324,7 +350,7 @@ export default function DataAyam() {
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="flex justify-between items-center">
-                                            <Button variant={"blue"} onClick={confirmHarvest} type="submit">
+                                            <Button variant={"blue"} onClick={confirmHarvest} className='w-full' type="submit">
                                                 Ya, Panen
                                             </Button>
                                         </div>
@@ -358,7 +384,24 @@ export default function DataAyam() {
                                 <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     USIA AYAM
                                 </div>
-                                <UsiaAyam />
+                                <div className="flex justify-between items-center">
+                                    <div className="w-full flex">
+                                        <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
+                                            <div className="flex h-[90px] w-auto flex-row items-center">
+                                                <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
+                                                    <span className="flex items-center text-brand-500 dark:text-white">
+                                                        <FaRegCalendarAlt size={50} />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="h-50 ml-4 flex w-auto flex-col justify-center">
+                                                <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Usia Ayam</p>
+                                                <h4 className={`${farmingStarted ? "text-4xl" : "text-4xl"
+                                                    } body-bold text-blue-500 dark:text-blue-700`}>{farmingStarted ? `${ageInDays} hari` : "0"}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
@@ -376,7 +419,7 @@ export default function DataAyam() {
                                             </div>
                                             <div className="h-50 ml-4 flex w-auto flex-col justify-center">
                                                 <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Jumlah Ayam</p>
-                                                <h4 className="text-4xl body-bold text-green-500 dark:text-green-700"> {jumlahAyam}</h4>
+                                                <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700"> {jumlahAyam}</h4>
                                             </div>
                                         </div>
                                     </div>
@@ -386,7 +429,23 @@ export default function DataAyam() {
                                 <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     MORTALITAS AYAM
                                 </div>
-                                <MortalitasAyam />
+                                <div className="flex justify-between items-center">
+                                    <div className="w-full flex">
+                                        <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
+                                            <div className="flex h-[90px] w-auto flex-row items-center">
+                                                <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
+                                                    <span className="flex items-center text-brand-500 dark:text-white">
+                                                        <BsHeartPulse size={50} />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="h-50 ml-4 flex w-auto flex-col justify-center">
+                                                <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Mortalitas Ayam</p>
+                                                <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700">{mortalitas}%</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -402,7 +461,7 @@ export default function DataAyam() {
                                     KENDALI JUMLAH AYAM
                                 </p>
                                 <div className='border rounded-lg'>
-                                    <AyamCounter jumlahAyam={jumlahAyam} onUpdateJumlahAyam={updateJumlahAyam}></AyamCounter>
+                                    <AyamCounter jumlahAyam={jumlahAyam} onUpdateJumlahAyam={updateJumlahAyam} updateMortalitas={updateMortalitas} />
                                 </div>
                             </div>
                         </div>

@@ -6,9 +6,10 @@ import { Button } from "./button";
 interface AyamCounterProps {
     jumlahAyam: number;
     onUpdateJumlahAyam: (jumlahAyamBaru: number) => void;
+    updateMortalitas: (ayamMati: number) => void;
 }
 
-const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAyam }) => {
+const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAyam, updateMortalitas }) => {
     const [ayamMati, setAyamMati] = useState<number>(0);
     const [history, setHistory] = useState<number[]>([]);
 
@@ -22,6 +23,7 @@ const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAya
     const handleUpdateAyamMati = () => {
         const jumlahAyamBaru = jumlahAyam - ayamMati;
         onUpdateJumlahAyam(jumlahAyamBaru);
+        updateMortalitas(ayamMati);
         setHistory([...history, ayamMati]);  // Menyimpan riwayat
         setAyamMati(0);  // Reset input
     };

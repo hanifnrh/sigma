@@ -13,7 +13,7 @@ const MortalitasAyam = () => {
                     </div>
                     <div className="h-50 ml-4 flex w-auto flex-col justify-center">
                         <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Mortalitas Ayam</p>
-                        <h4 className="text-4xl body-bold text-green-500 dark:text-green-700">0.5%</h4>
+                        <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700">0.5%</h4>
                     </div>
                 </div>
             </div>
