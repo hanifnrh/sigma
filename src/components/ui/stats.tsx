@@ -16,41 +16,96 @@ type Notification = {
 type StatsWidgetProps = {
     onNewNotification: (notif: Notification) => void;
     onDataUpdate: (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => void;
+    onOverallStatusChange: (overallStatus: { text: string; color: string }) => void;
 };
 
 const THRESHOLDS = {
-    ammonia: 25,
-    temperature: { min: 26, max: 32 },
-    humidity: { min: 40, max: 60 },
+    ammonia: { optimal: 20, good: 25, bad: 30 },
+    temperature: { veryGood: [26, 32], good: [[20, 25], [33, 34]], bad: [[18, 19], [35, 36]] },
+    humidity: { veryGood: [62, 68], good: [[60, 61], [69, 70]], bad: [[58, 59], [71, 72]] },
 };
 
-const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpdate }) => {
-    const [ammonia, setAmmonia] = useState(20);
-    const [temperature, setTemperature] = useState(24);
-    const [humidity, setHumidity] = useState(62);
+const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpdate, onOverallStatusChange }) => {
+    const [ammonia, setAmmonia] = useState(18);
+    const [temperature, setTemperature] = useState(28);
+    const [humidity, setHumidity] = useState(65);
 
     const [status, setStatus] = useState({
         ammonia: { text: "Sangat Baik", color: "text-green-500" },
         temperature: { text: "Baik", color: "text-blue-500" },
         humidity: { text: "Baik", color: "text-blue-500" },
-        overall: { text: "Baik", color: "text-blue-500" }
+        overall: { text: "Baik", color: "text-blue-500" },
     });
     const [warnings, setWarnings] = useState({
         ammonia: "",
         temperature: "",
-        humidity: ""
+        humidity: "",
     });
 
     const getTemperatureIcon = (temp: number) =>
-        temp > THRESHOLDS.temperature.max ? <FaTemperatureHigh /> : <FaTemperatureLow />;
+        temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
+
+    const checkTemperatureStatus = (temp: number) => {
+        if (temp >= THRESHOLDS.temperature.veryGood[0] && temp <= THRESHOLDS.temperature.veryGood[1]) {
+            return { text: "Sangat Baik", color: "text-green-500" };
+        }
+        if (
+            (temp >= THRESHOLDS.temperature.good[0][0] && temp <= THRESHOLDS.temperature.good[0][1]) ||
+            (temp >= THRESHOLDS.temperature.good[1][0] && temp <= THRESHOLDS.temperature.good[1][1])
+        ) {
+            return { text: "Baik", color: "text-blue-500" };
+        }
+        if (
+            (temp >= THRESHOLDS.temperature.bad[0][0] && temp <= THRESHOLDS.temperature.bad[0][1]) ||
+            (temp >= THRESHOLDS.temperature.bad[1][0] && temp <= THRESHOLDS.temperature.bad[1][1])
+        ) {
+            return { text: "Buruk", color: "text-yellow-500" };
+        }
+        return { text: "Bahaya", color: "text-red-500" };
+    };
+
+    const checkHumidityStatus = (hum: number) => {
+        if (hum >= THRESHOLDS.humidity.veryGood[0] && hum <= THRESHOLDS.humidity.veryGood[1]) {
+            return { text: "Sangat Baik", color: "text-green-500" };
+        }
+        if (
+            (hum >= THRESHOLDS.humidity.good[0][0] && hum <= THRESHOLDS.humidity.good[0][1]) ||
+            (hum >= THRESHOLDS.humidity.good[1][0] && hum <= THRESHOLDS.humidity.good[1][1])
+        ) {
+            return { text: "Baik", color: "text-blue-500" };
+        }
+        if (
+            (hum >= THRESHOLDS.humidity.bad[0][0] && hum <= THRESHOLDS.humidity.bad[0][1]) ||
+            (hum >= THRESHOLDS.humidity.bad[1][0] && hum <= THRESHOLDS.humidity.bad[1][1])
+        ) {
+            return { text: "Buruk", color: "text-yellow-500" };
+        }
+        return { text: "Bahaya", color: "text-red-500" };
+    };
 
     useEffect(() => {
-        // Define updated statuses and warnings based on the conditions
         const updatedStatus = { ...status };
         const updatedWarnings = { ...warnings };
 
         // Check ammonia
-        if (ammonia > THRESHOLDS.ammonia) {
+        if (ammonia < THRESHOLDS.ammonia.optimal) {
+            updatedStatus.ammonia = { text: "Sangat Baik", color: "text-green-500" };
+            updatedWarnings.ammonia = "";
+        } else if (ammonia >= THRESHOLDS.ammonia.optimal && ammonia < THRESHOLDS.ammonia.good) {
+            updatedStatus.ammonia = { text: "Baik", color: "text-blue-500" };
+            updatedWarnings.ammonia = "";
+        } else if (ammonia >= THRESHOLDS.ammonia.good && ammonia < THRESHOLDS.ammonia.bad) {
+            updatedStatus.ammonia = { text: "Buruk", color: "text-yellow-500" };
+            updatedWarnings.ammonia = "Segera bersihkan kandang!";
+            onNewNotification({
+                parameter: "Amonia",
+                status: "Buruk",
+                timestamp: new Date(),
+                message: "Segera bersihkan kandang!",
+                icon: <TbAtom2Filled />,
+                color: updatedStatus.ammonia.color,
+            });
+        } else {
             updatedStatus.ammonia = { text: "Bahaya", color: "text-red-500" };
             updatedWarnings.ammonia = "Segera bersihkan kandang!";
             onNewNotification({
@@ -61,64 +116,45 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
                 icon: <TbAtom2Filled />,
                 color: updatedStatus.ammonia.color,
             });
-        } else {
-            updatedStatus.ammonia = { text: "Sangat Baik", color: "text-green-500" };
-            updatedWarnings.ammonia = "";
         }
 
         // Check temperature
-        if (temperature < THRESHOLDS.temperature.min) {
-            updatedStatus.temperature = { text: "Buruk", color: "text-yellow-500" };
-            updatedWarnings.temperature = "Segera nyalakan lampu dan hangatkan kandang!";
-            onNewNotification({
-                parameter: "Suhu",
-                status: "Buruk",
-                timestamp: new Date(),
-                message: "Segera nyalakan lampu dan hangatkan kandang!",
-                icon: <FaTemperatureLow />,
-                color: updatedStatus.temperature.color,
-            });
-        } else if (temperature > THRESHOLDS.temperature.max) {
-            updatedStatus.temperature = { text: "Bahaya", color: "text-red-500" };
-            updatedWarnings.temperature = "Segera matikan lampu dan dinginkan kandang!";
-            onNewNotification({
-                parameter: "Suhu",
-                status: "Bahaya",
-                timestamp: new Date(),
-                message: "Segera matikan lampu dan dinginkan kandang!",
-                icon: <FaTemperatureHigh />,
-                color: updatedStatus.temperature.color,
-            });
+        updatedStatus.temperature = checkTemperatureStatus(temperature);
+        if (updatedStatus.temperature.text === "Bahaya") {
+            updatedWarnings.temperature = temperature < 18 || temperature > 36
+                ? "Segera atur suhu kandang!"
+                : "";
+            if (updatedWarnings.temperature) {
+                onNewNotification({
+                    parameter: "Suhu",
+                    status: "Bahaya",
+                    timestamp: new Date(),
+                    message: updatedWarnings.temperature,
+                    icon: getTemperatureIcon(temperature),
+                    color: updatedStatus.temperature.color,
+                });
+            }
         } else {
-            updatedStatus.temperature = { text: "Baik", color: "text-blue-500" };
             updatedWarnings.temperature = "";
         }
 
         // Check humidity
-        if (humidity < THRESHOLDS.humidity.min) {
-            updatedStatus.humidity = { text: "Buruk", color: "text-yellow-500" };
-            updatedWarnings.humidity = "Segera atur ventilasi kandang!";
-            onNewNotification({
-                parameter: "Kelembapan",
-                status: "Buruk",
-                timestamp: new Date(),
-                message: "Segera atur ventilasi kandang!",
-                icon: <IoWater />,
-                color: updatedStatus.humidity.color,
-            });
-        } else if (humidity > THRESHOLDS.humidity.max) {
-            updatedStatus.humidity = { text: "Bahaya", color: "text-red-500" };
-            updatedWarnings.humidity = "Segera atur ventilasi kandang!";
-            onNewNotification({
-                parameter: "Kelembapan",
-                status: "Bahaya",
-                timestamp: new Date(),
-                message: "Segera atur ventilasi kandang!",
-                icon: <IoWater />,
-                color: updatedStatus.humidity.color,
-            });
+        updatedStatus.humidity = checkHumidityStatus(humidity);
+        if (updatedStatus.humidity.text === "Bahaya") {
+            updatedWarnings.humidity = humidity < 58 || humidity > 72
+                ? "Segera atur ventilasi kandang!"
+                : "";
+            if (updatedWarnings.humidity) {
+                onNewNotification({
+                    parameter: "Kelembapan",
+                    status: "Bahaya",
+                    timestamp: new Date(),
+                    message: updatedWarnings.humidity,
+                    icon: <IoWater />,
+                    color: updatedStatus.humidity.color,
+                });
+            }
         } else {
-            updatedStatus.humidity = { text: "Baik", color: "text-blue-500" };
             updatedWarnings.humidity = "";
         }
 
@@ -127,18 +163,20 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
         if (allStatuses.some((s) => s.text === "Bahaya")) {
             updatedStatus.overall = { text: "Bahaya", color: "text-red-500" };
         } else if (allStatuses.some((s) => s.text === "Buruk")) {
-            updatedStatus.overall = { text: "Buruk", color: "text-orange-500" };
+            updatedStatus.overall = { text: "Buruk", color: "text-yellow-500" };
+        } else if (allStatuses.some((s) => s.text === "Baik")) {
+            updatedStatus.overall = { text: "Baik", color: "text-blue-500" };
         } else {
-            updatedStatus.overall = { text: "Baik", color: "text-green-500" };
+            updatedStatus.overall = { text: "Sangat Baik", color: "text-green-500" };
         }
 
         setStatus(updatedStatus);
         setWarnings(updatedWarnings);
-
+        onOverallStatusChange(updatedStatus.overall);
         onDataUpdate([
-            { Parameter: "Amonia", Value: `${ammonia} ppm`, Status: updatedStatus.ammonia.text, Timestamp: new Date()  },
-            { Parameter: "Suhu", Value: `${temperature} °C`, Status: updatedStatus.temperature.text, Timestamp: new Date()  },
-            { Parameter: "Kelembapan", Value: `${humidity}%`, Status: updatedStatus.humidity.text, Timestamp: new Date()  },
+            { Parameter: "Amonia", Value: `${ammonia} ppm`, Status: updatedStatus.ammonia.text, Timestamp: new Date() },
+            { Parameter: "Suhu", Value: `${temperature} °C`, Status: updatedStatus.temperature.text, Timestamp: new Date() },
+            { Parameter: "Kelembapan", Value: `${humidity}%`, Status: updatedStatus.humidity.text, Timestamp: new Date() },
         ]);
     }, [ammonia, temperature, humidity]);
 
@@ -146,10 +184,10 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
         <div className="flex justify-between items-center w-full p-4">
             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
                 {[
-                    { label: "Amonia", value: `${ammonia} ppm`, icon: <TbAtom2Filled/>, status: status.ammonia, warning: warnings.ammonia },
+                    { label: "Amonia", value: `${ammonia} ppm`, icon: <TbAtom2Filled />, status: status.ammonia, warning: warnings.ammonia },
                     { label: "Suhu", value: `${temperature} °C`, icon: getTemperatureIcon(temperature), status: status.temperature, warning: warnings.temperature },
-                    { label: "Kelembapan", value: `${humidity}%`, icon: <IoWater/>, status: status.humidity, warning: warnings.humidity },
-                    { label: "Status Total", value: status.overall.text, icon: <BiStats/>, status: status.overall, warning: "" }
+                    { label: "Kelembapan", value: `${humidity}%`, icon: <IoWater />, status: status.humidity, warning: warnings.humidity },
+                    { label: "Status Total", value: status.overall.text, icon: <BiStats />, status: status.overall, warning: "" }
                 ].map(({ label, value, icon, status, warning }) => (
                     <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
                         <div className="flex items-center">

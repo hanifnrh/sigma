@@ -45,6 +45,10 @@ type Notification = {
 };
 
 export default function DataAyam() {
+    const [overallStatus, setOverallStatus] = useState({ text: "Baik", color: "text-blue-500" });
+    const handleOverallStatusChange = (status: { text: string; color: string }) => {
+        setOverallStatus(status);
+    };
     const [date, setDate] = useState<Date | null>(null);
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [ageInDays, setAgeInDays] = useState<number>(0);
@@ -470,7 +474,7 @@ export default function DataAyam() {
                 </div>
             </div>
             <div className='hidden'>
-                <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} />
+                <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} onOverallStatusChange={handleOverallStatusChange} />
             </div>
         </main>
     );

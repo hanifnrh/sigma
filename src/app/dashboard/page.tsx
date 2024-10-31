@@ -37,8 +37,26 @@ type Notification = {
 };
 
 export default function Dashboard() {
+    const [overallStatus, setOverallStatus] = useState({ text: "Baik"});
+    const getStatusGradient = (statusText: string) => {
+        switch (statusText) {
+            case "Sangat Baik":
+                return "bg-[linear-gradient(107deg,#16CC53_8.32%,#108496_60.18%,#35B6CA_105.75%)]";
+            case "Baik":
+                return "bg-[linear-gradient(107deg,#3B82F6_8.32%,#1D4ED8_60.18%,#1E40AF_105.75%)]"; // Blue gradient
+            case "Buruk":
+                return "bg-[linear-gradient(107deg,#FBBF24_8.32%,#F59E0B_60.18%,#D97706_105.75%)]"; // Yellow gradient
+            case "Bahaya":
+                return "bg-[linear-gradient(107deg,#EF4444_8.32%,#B91C1C_60.18%,#7F1D1D_105.75%)]"; // Red gradient
+            default:
+                return "";
+        }
+    };
+    const handleOverallStatusChange = (status: { text: string }) => {
+        setOverallStatus(status);
+    };
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date}>>([]);
+    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
 
     const handleNewNotification = (notif: Notification) => {
         const exists = notifications.some(
@@ -57,7 +75,7 @@ export default function Dashboard() {
         writeFile(wb, "Dashboard.xlsx");
     };
 
-    const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date}>) => {
+    const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
         setStatsData(data);
     };
 
@@ -107,7 +125,7 @@ export default function Dashboard() {
                             </div>
                             <ModeToggle />
                             <img src="/profile.png" alt="Profile Picture" className='border-l ml-3 pl-5' />
-                                <RiArrowDropDownLine className="dark:text-white mx-1" />
+                            <RiArrowDropDownLine className="dark:text-white mx-1" />
                         </div>
                     </div>
                     <div className="flex header py-2 px-4 body-light justify-between items-center border-b bg-white">
@@ -127,12 +145,12 @@ export default function Dashboard() {
                     <div className="container-left flex flex-col justify-center items-center w-full border-r">
                         <div className='flex justify-between items-center py-5 px-4 w-full border-b'>
                             <div>
-                                <span className='text-2xl md:text-4xl title-head bg-[linear-gradient(107deg,#16CC53_8.32%,#108496_60.18%,#35B6CA_105.75%)] bg-clip-text text-transparent'>
-                                    Status Keseluruhan: Baik
+                                <span className={`text-2xl md:text-4xl title-head ${getStatusGradient(overallStatus.text)} cliptext text-transparent`}>
+                                    Status Keseluruhan: {overallStatus.text}
                                 </span>
                             </div>
                             <div className='border-l px-5'>
-                                <div className='navbar-title body-bold text-sm sm:text-xs '>
+                                <div className='navbar-title body-bold text-sm sm:text-xs'>
                                     USIA
                                 </div>
                                 <div className='text-2xl md:text-4xl title-head'>
@@ -159,7 +177,7 @@ export default function Dashboard() {
 
                             </div>
                         </div>
-                        <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} />
+                        <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate}  onOverallStatusChange={handleOverallStatusChange}/>
                         <div className='grid grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-8 w-full p-4 justify-between'>
                             <div className='w-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>

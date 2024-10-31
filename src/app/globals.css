@@ -349,3 +349,7 @@ body {
 .panen {
   box-shadow: 0px 0px 18.759px 0px rgba(235, 16, 16, 0.25);
 }
+
+.cliptext {
+  -webkit-background-clip: text;
+}
