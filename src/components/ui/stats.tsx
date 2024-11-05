@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { BiStats } from "react-icons/bi";
 import { FaTemperatureHigh, FaTemperatureLow } from "react-icons/fa";
 import { IoWater } from "react-icons/io5";
 import { TbAtom2Filled } from "react-icons/tb";
@@ -182,12 +181,11 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
 
     return (
         <div className="flex justify-between items-center w-full p-4">
-            <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {[
                     { label: "Amonia", value: `${ammonia} ppm`, icon: <TbAtom2Filled />, status: status.ammonia, warning: warnings.ammonia },
                     { label: "Suhu", value: `${temperature} °C`, icon: getTemperatureIcon(temperature), status: status.temperature, warning: warnings.temperature },
                     { label: "Kelembapan", value: `${humidity}%`, icon: <IoWater />, status: status.humidity, warning: warnings.humidity },
-                    { label: "Status Total", value: status.overall.text, icon: <BiStats />, status: status.overall, warning: "" }
                 ].map(({ label, value, icon, status, warning }) => (
                     <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
                         <div className="flex items-center">

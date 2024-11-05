@@ -43,8 +43,43 @@ type Notification = {
     icon: React.ReactNode;
     color: string;
 };
+interface CardProps {
+    title: string;
+    value: string | number; // value can be either string or number
+    Icon: React.ElementType; // Icon is a React component
+}
+interface DataAyamProps {
+    onAgeChange: (age: number) => void;
+    onJumlahAyamChange: (jumlah: number) => void;
+    onMortalitasChange: (mortalitas: number) => void;
+}
 
-export default function DataAyam() {
+const Card: React.FC<CardProps> = ({ title, value, Icon }) => (
+    <div>
+        <div className='uppercase navbar-title body-bold text-sm sm:text-xs mb-2'>
+            {title}
+        </div>
+        <div className="flex justify-between items-center">
+            <div className="w-full flex">
+                <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
+                    <div className="flex h-[90px] w-auto flex-row items-center">
+                        <div className="rounded-full bg-lightPrimary dark:bg-navy-700">
+                            <span className="flex items-center text-brand-500 dark:text-white">
+                                <Icon size={50} />
+                            </span>
+                        </div>
+                    </div>
+                    <div className="h-50 ml-4 flex w-auto flex-col justify-center">
+                        <p className="text-2xl font-medium text-gray-600 dark:text-white">{title}</p>
+                        <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700">{value}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+export default function DataAyam({ onAgeChange, onJumlahAyamChange, onMortalitasChange }: DataAyamProps) {
     const [overallStatus, setOverallStatus] = useState({ text: "Baik", color: "text-blue-500" });
     const handleOverallStatusChange = (status: { text: string; color: string }) => {
         setOverallStatus(status);
@@ -166,6 +201,8 @@ export default function DataAyam() {
         setJumlahAyam(jumlahAyamBaru);
     };
 
+
+
     return (
         <main className="w-full bg-white dark:bg-zinc-900 relative">
             <Navbar />
@@ -183,7 +220,6 @@ export default function DataAyam() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger className='p-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
                                         <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.parameter}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
-                                        {/* Notification Badge */}
                                         {notifications.length > 0 && (
                                             <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500"></span>
                                         )}
@@ -368,73 +404,21 @@ export default function DataAyam() {
                         </div>
 
                         <div className='w-full grid grid-cols-1 lg:grid-cols-3 gap-4 mt-10'>
-                            <div>
-                                <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
-                                    USIA AYAM
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <div className="w-full flex">
-                                        <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
-                                            <div className="flex h-[90px] w-auto flex-row items-center">
-                                                <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
-                                                    <span className="flex items-center text-brand-500 dark:text-white">
-                                                        <FaRegCalendarAlt size={50} />
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="h-50 ml-4 flex w-auto flex-col justify-center">
-                                                <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Usia Ayam</p>
-                                                <h4 className={`${farmingStarted ? "text-4xl" : "text-4xl"
-                                                    } body-bold text-blue-500 dark:text-blue-700`}>{farmingStarted ? `${ageInDays} hari` : "0"}</h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
-                                    JUMLAH AYAM
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <div className="w-full flex">
-                                        <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
-                                            <div className="flex h-[90px] w-auto flex-row items-center">
-                                                <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
-                                                    <span className="flex items-center text-brand-500 dark:text-white">
-                                                        <GiRooster size={50} />
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="h-50 ml-4 flex w-auto flex-col justify-center">
-                                                <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Jumlah Ayam</p>
-                                                <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700"> {jumlahAyam}</h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className='navbar-title body-bold text-sm sm:text-xs mb-2'>
-                                    MORTALITAS AYAM
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <div className="w-full flex">
-                                        <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
-                                            <div className="flex h-[90px] w-auto flex-row items-center">
-                                                <div className="rounded-full bg-lightPrimary  dark:bg-navy-700">
-                                                    <span className="flex items-center text-brand-500 dark:text-white">
-                                                        <BsHeartPulse size={50} />
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="h-50 ml-4 flex w-auto flex-col justify-center">
-                                                <p className="font-dm text-2xl font-medium text-gray-600 dark:text-white">Mortalitas Ayam</p>
-                                                <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700">{mortalitas}%</h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <Card
+                                title="Usia Ayam"
+                                value={farmingStarted ? `${ageInDays} hari` : "0"}
+                                Icon={FaRegCalendarAlt}
+                            />
+                            <Card
+                                title="Jumlah Ayam"
+                                value={jumlahAyam}
+                                Icon={GiRooster}
+                            />
+                            <Card
+                                title="Mortalitas Ayam"
+                                value={`${mortalitas}%`}
+                                Icon={BsHeartPulse}
+                            />
                         </div>
 
                         <div className='mt-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-4'>

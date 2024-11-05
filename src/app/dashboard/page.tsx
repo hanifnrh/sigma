@@ -13,17 +13,18 @@ import { ModeToggle } from '@/components/ui/mode-toggle';
 import { SensorBattery } from '@/components/ui/SensorBattery';
 import { SensorStatus } from '@/components/ui/SensorStatus';
 import StatsWidget from '@/components/ui/stats';
-import StatusDanger from '@/components/ui/status-danger';
-import StatusGood from '@/components/ui/status-good';
-import StatusSafe from '@/components/ui/status-safe';
-import StatusWarning from '@/components/ui/status-warning';
+import StatusIndicator from '@/components/ui/status-indicator';
 import dynamic from 'next/dynamic';
 import { useState } from "react";
+import { BsHeartPulse } from "react-icons/bs";
+import { FaRegCalendarAlt } from "react-icons/fa";
+import { GiRooster } from "react-icons/gi";
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { utils, writeFile } from "xlsx";
+import DataAyam from '../data-ayam/page';
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
@@ -37,7 +38,10 @@ type Notification = {
 };
 
 export default function Dashboard() {
-    const [overallStatus, setOverallStatus] = useState({ text: "Baik"});
+    const [ageInDays, setAgeInDays] = useState<number>(0);
+    const [jumlahAyam, setJumlahAyam] = useState<number>(0);
+    const [mortalitas, setMortalitas] = useState<number>(0);
+    const [overallStatus, setOverallStatus] = useState({ text: "Baik" });
     const getStatusGradient = (statusText: string) => {
         switch (statusText) {
             case "Sangat Baik":
@@ -159,25 +163,49 @@ export default function Dashboard() {
                             </div>
                         </div>
 
+                        <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} onOverallStatusChange={handleOverallStatusChange} />
+                        <div className="flex justify-between items-center w-full p-4">
+                            <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                                {[
+                                    { label: "Usia Ayam", value: `${ageInDays} ppm`, icon: <FaRegCalendarAlt />},
+                                    { label: "Jumlah Ayam", value: `${jumlahAyam} °C`, icon: <GiRooster />},
+                                    { label: "Mortalitas", value: `${mortalitas}%`, icon: <BsHeartPulse />},
+                                ].map(({ label, value, icon}) => (
+                                    <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
+                                        <div className="flex items-center">
+                                            <div className="flex h-[90px] w-auto items-center">
+                                                <div className="rounded-full bg-lightPrimary dark:bg-navy-700">
+                                                    <span className="flex items-center text-brand-500 dark:text-white text-4xl">
+                                                        {icon}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="ml-4 flex flex-col justify-center">
+                                                <p className="font-dm text-xl font-medium text-gray-600 dark:text-white">{label}</p>
+                                                <h4 className={`text-3xl body-bold text-blue-500`}>{value}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                         <div className="status-container flex items-center justify-center py-4 border-b w-full">
                             <div className="status-wrapper grid grid-cols-2 xl:grid-cols-4 gap-4">
-
-                                <div className="status flex items-center justify-center rounded-lg border ">
-                                    <StatusSafe className='text-green-500' />
+                                <div className="status flex items-center justify-center">
+                                    <StatusIndicator status="success">Sangat Baik</StatusIndicator>
                                 </div>
-                                <div className="status flex items-center justify-center rounded-lg border ">
-                                    <StatusGood className='text-blue-500' />
+                                <div className="status flex items-center justify-center">
+                                    <StatusIndicator status="info">Baik</StatusIndicator>
                                 </div>
-                                <div className="status flex items-center justify-center rounded-lg border ">
-                                    <StatusWarning className='text-yellow-500' />
+                                <div className="status flex items-center justify-center">
+                                    <StatusIndicator status="warning">Buruk</StatusIndicator>
                                 </div>
-                                <div className="status flex items-center justify-center rounded-lg border ">
-                                    <StatusDanger className='text-red-500' />
+                                <div className="status flex items-center justify-center">
+                                    <StatusIndicator status="error">Bahaya</StatusIndicator>
                                 </div>
 
                             </div>
                         </div>
-                        <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate}  onOverallStatusChange={handleOverallStatusChange}/>
                         <div className='grid grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-8 w-full p-4 justify-between'>
                             <div className='w-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
@@ -201,6 +229,20 @@ export default function Dashboard() {
                         <div>
                             <SensorBattery />
                         </div>
+                    </div>
+                </div>
+                <div>
+                    {/* Kirim state sebagai props ke DataAyam */}
+                    <DataAyam
+                        onAgeChange={setAgeInDays}
+                        onJumlahAyamChange={setJumlahAyam}
+                        onMortalitasChange={setMortalitas}
+                    />
+                    {/* Gunakan data di sini */}
+                    <div>
+                        <p>Usia Ayam: {ageInDays} hari</p>
+                        <p>Jumlah Ayam: {jumlahAyam}</p>
+                        <p>Mortalitas: {mortalitas}%</p>
                     </div>
                 </div>
             </div>
