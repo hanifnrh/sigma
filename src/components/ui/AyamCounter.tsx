@@ -7,9 +7,10 @@ interface AyamCounterProps {
     jumlahAyam: number;
     onUpdateJumlahAyam: (jumlahAyamBaru: number) => void;
     updateMortalitas: (ayamMati: number) => void;
+    farmingStarted: boolean;
 }
 
-const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAyam, updateMortalitas }) => {
+const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAyam, updateMortalitas, farmingStarted }) => {
     const [ayamMati, setAyamMati] = useState<number>(0);
     const [history, setHistory] = useState<number[]>([]);
 
@@ -50,6 +51,7 @@ const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAya
                     className="mb-4"
                 />
                 <Button
+                    disabled={!farmingStarted}
                     variant={'blue'}
                     onClick={handleUpdateAyamMati}
                     className="mb-2 w-full"
@@ -57,6 +59,7 @@ const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAya
                     Kurangi Jumlah Ayam
                 </Button>
                 <Button
+                    disabled={!farmingStarted}
                     variant={'baik'}
                     onClick={handleUndo}
                     className="w-full"

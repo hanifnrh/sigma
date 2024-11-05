@@ -27,7 +27,7 @@ const THRESHOLDS = {
 
 const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpdate, onOverallStatusChange }) => {
     const [ammonia, setAmmonia] = useState(18);
-    const [temperature, setTemperature] = useState(25);
+    const [temperature, setTemperature] = useState(35);
     const [humidity, setHumidity] = useState(40);
 
     const [status, setStatus] = useState({

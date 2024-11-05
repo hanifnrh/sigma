@@ -360,7 +360,7 @@ export default function DataAyam() {
                                 <div className='flex justify-end items-start'>
                                     <Button variant={"jumlahAyam"} className='w-full lg:w-72'>
                                         <div className='text-sm sm:text-xl'>
-                                            Jumlah ayam awal: {jumlahAyam}
+                                            Jumlah ayam awal: {jumlahAwalAyam}
                                         </div>
                                     </Button>
                                 </div>
@@ -449,7 +449,7 @@ export default function DataAyam() {
                                     KENDALI JUMLAH AYAM
                                 </p>
                                 <div className='border rounded-lg'>
-                                    <AyamCounter jumlahAyam={jumlahAyam} onUpdateJumlahAyam={updateJumlahAyam} updateMortalitas={updateMortalitas} />
+                                    <AyamCounter jumlahAyam={jumlahAyam} onUpdateJumlahAyam={updateJumlahAyam} updateMortalitas={updateMortalitas} farmingStarted={farmingStarted} />
                                 </div>
                             </div>
                         </div>
