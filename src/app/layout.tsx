@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <Head>
         <link rel="manifest" href="/manifest.json" />
-        <title>{String(metadata.title ?? "Default Title")}</title>
+        <title>Sigma</title>
         <meta name="description" content={metadata.description ?? "Default description"} />
       </Head>
       <body>

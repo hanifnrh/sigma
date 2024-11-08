@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import StatsWidget from '@/components/ui/stats';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from "react";
 import { BsHeartPulse } from "react-icons/bs";
 import { FaPlay, FaRegCalendarAlt, FaStop } from "react-icons/fa";
@@ -33,6 +34,7 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Navbar from "../navbar";
+
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 type Notification = {
@@ -47,11 +49,6 @@ interface CardProps {
     title: string;
     value: string | number; // value can be either string or number
     Icon: React.ElementType; // Icon is a React component
-}
-interface DataAyamProps {
-    onAgeChange: (age: number) => void;
-    onJumlahAyamChange: (jumlah: number) => void;
-    onMortalitasChange: (mortalitas: number) => void;
 }
 
 const Card: React.FC<CardProps> = ({ title, value, Icon }) => (
@@ -79,7 +76,7 @@ const Card: React.FC<CardProps> = ({ title, value, Icon }) => (
     </div>
 );
 
-export default function DataAyam({ onAgeChange, onJumlahAyamChange, onMortalitasChange }: DataAyamProps) {
+export default function DataAyam() {
     const [overallStatus, setOverallStatus] = useState({ text: "Baik", color: "text-blue-500" });
     const handleOverallStatusChange = (status: { text: string; color: string }) => {
         setOverallStatus(status);
@@ -100,6 +97,17 @@ export default function DataAyam({ onAgeChange, onJumlahAyamChange, onMortalitas
     const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+    const router = useRouter(); // Access the router
+    
+    const handleNavigateWithParams = () => {
+        // Store data in session storage
+        sessionStorage.setItem('ageInDays', ageInDays.toString());
+        sessionStorage.setItem('jumlahAyam', jumlahAyam.toString());
+        sessionStorage.setItem('mortalitas', mortalitas.toString());
+
+        // Navigate to the Dashboard
+        router.push('/dashboard');
+    };
 
     const updateMortalitas = (ayamMati: number) => {
         if (jumlahAwalAyam > 0) {

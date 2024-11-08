@@ -119,44 +119,38 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
 
         // Check temperature
         updatedStatus.temperature = checkTemperatureStatus(temperature);
-        if (updatedStatus.temperature.text === "Bahaya") {
-            updatedWarnings.temperature = temperature < 18 || temperature > 36
-                ? "Segera atur suhu kandang!"
-                : "";
-            if (updatedWarnings.temperature) {
-                onNewNotification({
-                    parameter: "Suhu",
-                    status: "Bahaya",
-                    timestamp: new Date(),
-                    message: updatedWarnings.temperature,
-                    icon: getTemperatureIcon(temperature),
-                    color: updatedStatus.temperature.color,
-                });
-            }
+        if (updatedStatus.temperature.text === "Bahaya" || updatedStatus.temperature.text === "Buruk") {
+            const statusText = updatedStatus.temperature.text;
+            updatedWarnings.temperature = "Segera atur suhu kandang!";
+            onNewNotification({
+                parameter: "Suhu",
+                status: statusText,
+                timestamp: new Date(),
+                message: updatedWarnings.temperature,
+                icon: getTemperatureIcon(temperature),
+                color: updatedStatus.temperature.color,
+            });
         } else {
             updatedWarnings.temperature = "";
         }
 
         // Check humidity
         updatedStatus.humidity = checkHumidityStatus(humidity);
-        if (updatedStatus.humidity.text === "Bahaya") {
-            updatedWarnings.humidity = humidity < 58 || humidity > 72
-                ? "Segera atur ventilasi kandang!"
-                : "";
-            if (updatedWarnings.humidity) {
-                onNewNotification({
-                    parameter: "Kelembapan",
-                    status: "Bahaya",
-                    timestamp: new Date(),
-                    message: updatedWarnings.humidity,
-                    icon: <IoWater />,
-                    color: updatedStatus.humidity.color,
-                });
-            }
+        if (updatedStatus.humidity.text === "Bahaya" || updatedStatus.humidity.text === "Buruk") {
+            const statusText = updatedStatus.humidity.text;
+            updatedWarnings.humidity = "Segera atur ventilasi kandang!";
+            onNewNotification({
+                parameter: "Kelembapan",
+                status: statusText,
+                timestamp: new Date(),
+                message: updatedWarnings.humidity,
+                icon: <IoWater />,
+                color: updatedStatus.humidity.color,
+            });
         } else {
             updatedWarnings.humidity = "";
         }
-
+        
         // Set overall status
         const allStatuses = [updatedStatus.ammonia, updatedStatus.temperature, updatedStatus.humidity];
         if (allStatuses.some((s) => s.text === "Bahaya")) {

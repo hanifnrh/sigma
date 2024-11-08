@@ -15,7 +15,8 @@ import { SensorStatus } from '@/components/ui/SensorStatus';
 import StatsWidget from '@/components/ui/stats';
 import StatusIndicator from '@/components/ui/status-indicator';
 import dynamic from 'next/dynamic';
-import { useState } from "react";
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from "react";
 import { BsHeartPulse } from "react-icons/bs";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { GiRooster } from "react-icons/gi";
@@ -24,7 +25,6 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { utils, writeFile } from "xlsx";
-import DataAyam from '../data-ayam/page';
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
@@ -38,9 +38,24 @@ type Notification = {
 };
 
 export default function Dashboard() {
-    const [ageInDays, setAgeInDays] = useState<number>(0);
+    const pathname = usePathname(); // Get the current pathname
+    const searchParams = useSearchParams(); // Get query parameters
     const [jumlahAyam, setJumlahAyam] = useState<number>(0);
     const [mortalitas, setMortalitas] = useState<number>(0);
+    const [ageInDays, setAgeInDays] = useState<number>(0);
+
+    useEffect(() => {
+        // Retrieve data from sessionStorage
+        const storedJumlahAyam = sessionStorage.getItem('jumlahAyam');
+        const storedMortalitas = sessionStorage.getItem('mortalitas');
+        const storedAgeInDays = sessionStorage.getItem('ageInDays');
+
+        // Update state with the retrieved values if they exist
+        if (storedJumlahAyam) setJumlahAyam(parseInt(storedJumlahAyam));
+        if (storedMortalitas) setMortalitas(parseFloat(storedMortalitas));
+        if (storedAgeInDays) setAgeInDays(parseInt(storedAgeInDays));
+    }, []);
+
     const [overallStatus, setOverallStatus] = useState({ text: "Baik" });
     const getStatusGradient = (statusText: string) => {
         switch (statusText) {
@@ -167,10 +182,10 @@ export default function Dashboard() {
                         <div className="flex justify-between items-center w-full p-4">
                             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                                 {[
-                                    { label: "Usia Ayam", value: `${ageInDays} ppm`, icon: <FaRegCalendarAlt />},
-                                    { label: "Jumlah Ayam", value: `${jumlahAyam} °C`, icon: <GiRooster />},
-                                    { label: "Mortalitas", value: `${mortalitas}%`, icon: <BsHeartPulse />},
-                                ].map(({ label, value, icon}) => (
+                                    { label: "Usia Ayam", value: `${ageInDays} hari`, icon: <FaRegCalendarAlt /> },
+                                    { label: "Jumlah Ayam", value: `${jumlahAyam}`, icon: <GiRooster /> },
+                                    { label: "Mortalitas", value: `${mortalitas}%`, icon: <BsHeartPulse /> },
+                                ].map(({ label, value, icon }) => (
                                     <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
                                         <div className="flex items-center">
                                             <div className="flex h-[90px] w-auto items-center">
@@ -229,20 +244,6 @@ export default function Dashboard() {
                         <div>
                             <SensorBattery />
                         </div>
-                    </div>
-                </div>
-                <div>
-                    {/* Kirim state sebagai props ke DataAyam */}
-                    <DataAyam
-                        onAgeChange={setAgeInDays}
-                        onJumlahAyamChange={setJumlahAyam}
-                        onMortalitasChange={setMortalitas}
-                    />
-                    {/* Gunakan data di sini */}
-                    <div>
-                        <p>Usia Ayam: {ageInDays} hari</p>
-                        <p>Jumlah Ayam: {jumlahAyam}</p>
-                        <p>Mortalitas: {mortalitas}%</p>
                     </div>
                 </div>
             </div>
