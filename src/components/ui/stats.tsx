@@ -25,9 +25,12 @@ const THRESHOLDS = {
 };
 
 const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpdate, onOverallStatusChange }) => {
-    const [ammonia, setAmmonia] = useState(18);
-    const [temperature, setTemperature] = useState(35);
-    const [humidity, setHumidity] = useState(40);
+    // const [ammonia, setAmmonia] = useState(18);
+    // const [temperature, setTemperature] = useState(35);
+    // const [humidity, setHumidity] = useState(40);
+    const [ammonia, setAmmonia] = useState<number | null>(null);
+    const [temperature, setTemperature] = useState<number | null>(null);
+    const [humidity, setHumidity] = useState<number | null>(null);
 
     const [status, setStatus] = useState({
         ammonia: { text: "Sangat Baik", color: "text-green-500" },
@@ -82,7 +85,46 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
         return { text: "Bahaya", color: "text-red-500" };
     };
 
+
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch("/api/parameters");
+                const data = await response.json();
+
+                if (data && Array.isArray(data)) {
+                    // Ensure timestamp is parsed as Date and compare by the time
+                    const latestData = data
+                        .sort((a, b) => {
+                            const dateA = new Date(a.timestamp); // Parse timestamp to Date object
+                            const dateB = new Date(b.timestamp); // Parse timestamp to Date object
+
+                            // Compare timestamps by their time (in milliseconds)
+                            return dateB.getTime() - dateA.getTime(); // Sort in descending order
+                        })[0]; // Get the latest data (first after sorting)
+
+                    const { ammonia, temperature, humidity } = latestData;
+                    setAmmonia(ammonia);
+                    setTemperature(temperature);
+                    setHumidity(humidity);
+                }
+            } catch (error) {
+                console.error("Error fetching parameter data:", error);
+            }
+        };
+
+        fetchData();
+
+        const interval = setInterval(fetchData, 10000); // Fetch data every 10 seconds
+
+        return () => clearInterval(interval); // Cleanup on component unmount
+    }, []);
+
+
+
+    useEffect(() => {
+        if (ammonia === null || temperature === null || humidity === null) return;
+
         const updatedStatus = { ...status };
         const updatedWarnings = { ...warnings };
 
@@ -150,7 +192,7 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
         } else {
             updatedWarnings.humidity = "";
         }
-        
+
         // Set overall status
         const allStatuses = [updatedStatus.ammonia, updatedStatus.temperature, updatedStatus.humidity];
         if (allStatuses.some((s) => s.text === "Bahaya")) {
@@ -178,7 +220,7 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({ onNewNotification, onDataUpda
             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {[
                     { label: "Amonia", value: `${ammonia} ppm`, icon: <TbAtom2Filled />, status: status.ammonia, warning: warnings.ammonia },
-                    { label: "Suhu", value: `${temperature} °C`, icon: getTemperatureIcon(temperature), status: status.temperature, warning: warnings.temperature },
+                    { label: "Suhu", value: `${temperature ?? 0} °C`, icon: getTemperatureIcon(temperature ?? 0), status: status.temperature, warning: warnings.temperature },
                     { label: "Kelembapan", value: `${humidity}%`, icon: <IoWater />, status: status.humidity, warning: warnings.humidity },
                 ].map(({ label, value, icon, status, warning }) => (
                     <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">

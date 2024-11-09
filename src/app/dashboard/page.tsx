@@ -15,7 +15,7 @@ import { SensorStatus } from '@/components/ui/SensorStatus';
 import StatsWidget from '@/components/ui/stats';
 import StatusIndicator from '@/components/ui/status-indicator';
 import dynamic from 'next/dynamic';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from "react";
 import { BsHeartPulse } from "react-icons/bs";
 import { FaRegCalendarAlt } from "react-icons/fa";
@@ -39,7 +39,6 @@ type Notification = {
 
 export default function Dashboard() {
     const pathname = usePathname(); // Get the current pathname
-    const searchParams = useSearchParams(); // Get query parameters
     const [jumlahAyam, setJumlahAyam] = useState<number>(0);
     const [mortalitas, setMortalitas] = useState<number>(0);
     const [ageInDays, setAgeInDays] = useState<number>(0);

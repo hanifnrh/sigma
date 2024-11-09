@@ -5,8 +5,8 @@ import { Button } from "./button";
 
 interface AyamCounterProps {
     jumlahAyam: number;
-    onUpdateJumlahAyam: (jumlahAyamBaru: number) => void;
-    updateMortalitas: (ayamMati: number) => void;
+    onUpdateJumlahAyam: (id: number, jumlahAyamBaru: number) => void;
+    updateMortalitas: (id: number, ayamMati: number) => void;
     farmingStarted: boolean;
 }
 
@@ -23,8 +23,8 @@ const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAya
 
     const handleUpdateAyamMati = () => {
         const jumlahAyamBaru = jumlahAyam - ayamMati;
-        onUpdateJumlahAyam(jumlahAyamBaru);
-        updateMortalitas(ayamMati);
+        onUpdateJumlahAyam(1, jumlahAyamBaru);
+        updateMortalitas(1, ayamMati);
         setHistory([...history, ayamMati]);  // Menyimpan riwayat
         setAyamMati(0);  // Reset input
     };
@@ -32,7 +32,7 @@ const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAya
     const handleUndo = () => {
         const lastValue = history.pop();
         if (lastValue !== undefined) {
-            onUpdateJumlahAyam(jumlahAyam + lastValue);
+            onUpdateJumlahAyam(1, jumlahAyam + lastValue);
             setHistory([...history]);  // Update history setelah undo
         }
     };

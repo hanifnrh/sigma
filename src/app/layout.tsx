@@ -1,35 +1,27 @@
-"use client"; // Menandakan bahwa ini adalah komponen sisi klien
-
-import Head from "next/head";
-import { useEffect } from 'react';
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import type { Metadata } from "next";
 import "./globals.css";
-import { metadata } from './metadata'; // Mengimpor metadata
+
+export const metadata: Metadata = {
+  title: "Sigma",
+  description: "Sistem IoT Terintegrasi Monitoring Kandang Ayam",
+  icons: {
+    icon: "./favicon.ico",
+  },
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
-  }, []);
-
   return (
     <html lang="en">
-      <Head>
+      <head>
         <link rel="manifest" href="/manifest.json" />
-        <title>Sigma</title>
-        <meta name="description" content={metadata.description ?? "Default description"} />
-      </Head>
+      </head>
       <body>
+        <ServiceWorkerRegister></ServiceWorkerRegister>
         {children}
       </body>
     </html>
