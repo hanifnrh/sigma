@@ -99,25 +99,25 @@ export default function DataAyam() {
     const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
     const router = useRouter(); // Access the router
 
-    
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await fetch('http://localhost:8000/api/data-ayam/'); // Use the correct endpoint
-    
+
                 // Check if the response status is okay (2xx)
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-    
+
                 const data = await response.json();
-    
+
                 // Ensure the data is an array (even if it has one item)
                 if (Array.isArray(data) && data.length > 0) {
                     // Access the first item in the array if it's there
                     const latestData = data[0];
                     console.log("Fetched data:", latestData);
-    
+
                     const { jumlah_ayam_awal, tanggal_panen, jumlah_ayam, mortalitas, usia_ayam } = latestData;
                     setJumlahAwalAyam(jumlah_ayam_awal);
                     setTargetTanggal(new Date(tanggal_panen)); // Convert to Date object
@@ -127,13 +127,19 @@ export default function DataAyam() {
 
                     setFarmingStarted(true);
                 } else {
-                    console.error("No data available or invalid format");
+                    // If no data or invalid format, set all values to default (0)
+
+                    setJumlahAwalAyam(0);
+                    setTargetTanggal(new Date()); // Default to current date
+                    setJumlahAyam(0);
+                    setMortalitas(0);
+                    setAgeInDays(0);
 
                     setFarmingStarted(false);
                 }
             } catch (error) {
                 console.error("Error fetching ayam data:", error);
-    
+
                 // Log additional error details if available
                 if (error instanceof Error) {
                     console.error("Error message:", error.message);
@@ -141,24 +147,32 @@ export default function DataAyam() {
                     console.error("Unexpected error:", error);
                 }
 
+                // Set default values when there's an error
+                setJumlahAwalAyam(0);
+                setTargetTanggal(new Date()); // Default to current date
+                setJumlahAyam(0);
+                setMortalitas(0);
+                setAgeInDays(0);
+
                 setFarmingStarted(false);
             }
         };
-    
+
         // Call fetchData immediately when the component mounts
         fetchData();
-    
+
         // Set up interval to fetch data every 10 seconds
-        const interval = setInterval(fetchData, 1000);
-    
+        const interval = setInterval(fetchData, 10000);
+
         // Cleanup interval when the component unmounts
         return () => clearInterval(interval);
     }, []);
-    
+
+
     const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
         setStatsData(data);
     };
-    
+
     const handleNewNotification = (notif: Notification) => {
         const exists = notifications.some(
             (n) => n.parameter === notif.parameter && n.status === notif.status
@@ -260,65 +274,142 @@ export default function DataAyam() {
         }
     };
 
-    const updateJumlahAyam = async (id: number, jumlahAyamBaru: number) => {
+    const updateJumlahAyam = async (jumlahAyamAwal: number, jumlahAyamBaru: number) => {
         const data = {
-            jumlah_ayam: jumlahAyamBaru // Hanya field yang ingin diperbarui
+            jumlah_ayam: jumlahAyamBaru // Only the field you want to update
         };
-    
+
         try {
-            const response = await fetch(`http://localhost:8000/api/data-ayam/${id}/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-    
-            const result = await response.json();
+            // Fetch all data
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
             if (!response.ok) {
-                console.error('Server response error:', result);
-                throw new Error('Failed to update chicken count');
+                throw new Error('Failed to fetch ayam data');
             }
-    
-            console.log('Chicken count updated:', result);
+
+            const allData = await response.json();
+
+            // If there's existing data, update it using the first (or only) item
+            if (allData.length > 0) {
+                const record = allData[0];  // Assuming there's only one record, we take the first one
+
+                // If record exists, we can patch the data
+                const updateResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await updateResponse.json();
+                if (!updateResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to update chicken count');
+                }
+
+                console.log('Chicken count updated:', result);
+            } else {
+                // If no existing data, create new data
+                const createResponse = await fetch('http://localhost:8000/api/data-ayam/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        jumlah_ayam_awal: jumlahAyamAwal,  // Set initial count
+                        jumlah_ayam: jumlahAyamBaru,       // Set new chicken count
+                        tanggal_panen: new Date(),         // Set current harvest date
+                        mortalitas: 0,                     // Set initial mortalitas (0)
+                        usia_ayam: 0                       // Set initial age (0)
+                    }),
+                });
+
+                const result = await createResponse.json();
+                if (!createResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to create new ayam data');
+                }
+
+                console.log('New chicken data created:', result);
+            }
+
         } catch (error) {
             console.error('Error:', error);
             alert('Terjadi kesalahan saat memperbarui jumlah ayam.');
         }
     };
 
-    const updateMortalitas = async (id: number, ayamMati: number) => {
-        if (jumlahAwalAyam > 0) {
-            // Hitung persentase mortalitas berdasarkan jumlah ayam yang mati
-            const mortalitasPersen = ((ayamMati / jumlahAwalAyam) * 100).toFixed(1);
-            const mortalitasValue = parseFloat(mortalitasPersen);
-    
-            // Update nilai mortalitas di state
-            setMortalitas(mortalitasValue);
-    
-            // Kirim data mortalitas yang baru ke API untuk memperbarui di backend
-            try {
-                const response = await fetch(`http://localhost:8000/api/data-ayam/${id}/`, {
-                    method: 'PATCH', // Gunakan PATCH untuk update sebagian data
+
+    const updateMortalitas = async (JumlahAwalAyam: number, ayamMati: number) => {
+        const mortalityPercentage = (((JumlahAwalAyam - jumlahAyam) / JumlahAwalAyam) * 100).toFixed(1);
+
+        const data = {
+            mortalitas: mortalityPercentage, // Set the calculated mortality
+        };
+
+        try {
+            // Fetch all data
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+
+            // If there's existing data, update it using the first (or only) item
+            if (allData.length > 0) {
+                const record = allData[0];  // Assuming there's only one record, we take the first one
+
+                // If record exists, we can patch the data
+                const updateResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ mortalitas: mortalitasValue }), // Kirim hanya field yang diubah
+                    body: JSON.stringify(data),
                 });
-    
-                if (!response.ok) {
+
+                const result = await updateResponse.json();
+                if (!updateResponse.ok) {
+                    console.error('Server response error:', result);
                     throw new Error('Failed to update mortalitas');
                 }
-    
-                const result = await response.json();
-                console.log('Mortalitas berhasil diupdate:', result);
-            } catch (error) {
-                console.error('Error updating mortalitas:', error);
-                alert('Terjadi kesalahan saat memperbarui mortalitas.');
+
+                console.log('Mortalitas updated:', result);
+            } else {
+                // If no existing data, create new data
+                const createResponse = await fetch('http://localhost:8000/api/data-ayam/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mortalitas: data.mortalitas,  // Set the initial mortalitas
+                        jumlah_ayam: jumlahAyam,      // Set current chicken count
+                        jumlah_ayam_awal: JumlahAwalAyam, // Set initial chicken count
+                        tanggal_panen: new Date(),    // Set current harvest date
+                        usia_ayam: 0                  // Set initial age (0)
+                    }),
+                });
+
+                const result = await createResponse.json();
+                if (!createResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to create new ayam data');
+                }
+
+                console.log('New mortalitas data created:', result);
             }
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memperbarui mortalitas.');
         }
     };
-    
+
+
+
+
     function handleHarvest() {
         if (targetTanggal) {
             const today = new Date();
@@ -570,7 +661,7 @@ export default function DataAyam() {
                                     KENDALI JUMLAH AYAM
                                 </p>
                                 <div className='border rounded-lg'>
-                                    <AyamCounter jumlahAyam={jumlahAyam} onUpdateJumlahAyam={updateJumlahAyam} updateMortalitas={updateMortalitas} farmingStarted={farmingStarted} />
+                                    <AyamCounter jumlahAyam={jumlahAyam} jumlahAwalAyam={jumlahAwalAyam} onUpdateJumlahAyam={updateJumlahAyam} updateMortalitas={updateMortalitas} farmingStarted={farmingStarted} />
                                 </div>
                             </div>
                         </div>

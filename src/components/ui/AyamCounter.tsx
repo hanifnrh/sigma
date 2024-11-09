@@ -5,12 +5,13 @@ import { Button } from "./button";
 
 interface AyamCounterProps {
     jumlahAyam: number;
-    onUpdateJumlahAyam: (id: number, jumlahAyamBaru: number) => void;
-    updateMortalitas: (id: number, ayamMati: number) => void;
+    jumlahAwalAyam: number;  // Add jumlahAwalAyam here
+    onUpdateJumlahAyam: (jumlahAyamAwal: number, jumlahAyamBaru: number) => void;
+    updateMortalitas: (jumlahAyam: number, ayamMati: number) => void;
     farmingStarted: boolean;
 }
 
-const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAyam, updateMortalitas, farmingStarted }) => {
+const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, jumlahAwalAyam, onUpdateJumlahAyam, updateMortalitas, farmingStarted }) => {
     const [ayamMati, setAyamMati] = useState<number>(0);
     const [history, setHistory] = useState<number[]>([]);
 
@@ -22,18 +23,19 @@ const AyamCounter: React.FC<AyamCounterProps> = ({ jumlahAyam, onUpdateJumlahAya
     };
 
     const handleUpdateAyamMati = () => {
+        // Use jumlahAwalAyam for mortality calculation
         const jumlahAyamBaru = jumlahAyam - ayamMati;
-        onUpdateJumlahAyam(1, jumlahAyamBaru);
-        updateMortalitas(1, ayamMati);
-        setHistory([...history, ayamMati]);  // Menyimpan riwayat
-        setAyamMati(0);  // Reset input
+        onUpdateJumlahAyam(jumlahAyam, jumlahAyamBaru);
+        updateMortalitas(jumlahAwalAyam, ayamMati);  // Pass jumlahAwalAyam instead of jumlahAyam
+        setHistory([...history, ayamMati]);  // Save the history
+        setAyamMati(0);  // Reset the input
     };
 
     const handleUndo = () => {
         const lastValue = history.pop();
         if (lastValue !== undefined) {
             onUpdateJumlahAyam(1, jumlahAyam + lastValue);
-            setHistory([...history]);  // Update history setelah undo
+            setHistory([...history]);  // Update history after undo
         }
     };
 
