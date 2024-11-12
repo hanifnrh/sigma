@@ -81,7 +81,6 @@ export default function DataAyam() {
     const handleOverallStatusChange = (status: { text: string; color: string }) => {
         setOverallStatus(status);
     };
-    const [startDate, setStartDate] = useState<Date | null>(null);
     const [ageInDays, setAgeInDays] = useState<number>(0);
     const [jumlahAyam, setJumlahAyam] = useState<number>(0);
     const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
@@ -164,13 +163,7 @@ export default function DataAyam() {
 
         // Call fetchData immediately when the component mounts
         fetchData();
-
-        // Set up interval to fetch data every 10 seconds
-        const interval = setInterval(fetchData, 10000);
-
-        // Cleanup interval when the component unmounts
-        return () => clearInterval(interval);
-    }, []);
+    }, [jumlahAyam, mortalitas]);
 
 
     const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
@@ -186,34 +179,30 @@ export default function DataAyam() {
         }
     };
 
-    const calculateAge = () => {
-        if (tanggalMulai && targetTanggal) {
-            // Ensure both tanggalMulai and targetTanggal are Date objects
-            const startDate = new Date(tanggalMulai); // Ensure tanggalMulai is a Date object
-            const harvestDate = new Date(targetTanggal); // Ensure targetTanggal is a Date object
-
-            const now = new Date();
-
-            // Calculate the difference in milliseconds between the current date and the start date
-            const ageInDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            // Calculate the remaining days until harvest (target date)
-            const daysUntilHarvest = Math.floor((harvestDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-            setAgeInDays(ageInDays); // Update the age of chickens
-            setCountdown(`Tersisa ${daysUntilHarvest} hari untuk panen`); // Update the countdown for harvest
-        }
-    };
-
-    // useEffect to calculate age and update every day when farming starts
     useEffect(() => {
         if (farmingStarted && tanggalMulai && targetTanggal) {
-            calculateAge(); // Initial calculation when farming starts
+            const calculateAge = () => {
+                const startDate = new Date(tanggalMulai);
+                const harvestDate = new Date(targetTanggal);
+                const now = new Date();
+    
+                // Calculate the age in days
+                const ageInDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                const daysUntilHarvest = Math.floor((harvestDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+                setAgeInDays(ageInDays);
+                setCountdown(`Tersisa ${daysUntilHarvest} hari untuk panen`);
+            };
+    
+            // Initial calculation of age
+            calculateAge();
+    
+            // Update age every day
             const ageInterval = setInterval(calculateAge, 1000 * 60 * 60 * 24); // Update every day
-
-            return () => clearInterval(ageInterval); // Cleanup interval when component unmounts
+    
+            return () => clearInterval(ageInterval); // Cleanup when component unmounts
         }
-    }, [tanggalMulai, targetTanggal, farmingStarted]);
+    }, [farmingStarted, tanggalMulai, targetTanggal]);
 
     async function handleStartFarming(initialCount: number, targetDate: Date | null) {
         if (!targetDate) {
@@ -223,10 +212,6 @@ export default function DataAyam() {
     
         const now = new Date();
         const target = new Date(targetDate);
-    
-        // Set waktu jam, menit, dan detik ke 0 untuk perbandingan yang lebih tepat
-        now.setHours(0, 0, 0, 0);
-        target.setHours(0, 0, 0, 0);
     
         // Cek jika tanggal yang dipilih kurang dari hari ini
         if (target <= now) {
@@ -338,6 +323,7 @@ export default function DataAyam() {
                 }
 
                 console.log('Chicken count updated:', result);
+                setJumlahAyam(jumlahAyamBaru); 
             } else {
                 // If no existing data, create new data
                 const createResponse = await fetch('http://localhost:8000/api/data-ayam/', {
@@ -361,6 +347,7 @@ export default function DataAyam() {
                 }
 
                 console.log('New chicken data created:', result);
+                setJumlahAyam(jumlahAyamBaru); 
             }
 
         } catch (error) {
@@ -424,6 +411,7 @@ export default function DataAyam() {
     
                 const result = await createResponse.json();
                 console.log('New mortalitas data created:', result);
+                setMortalitas(parseFloat(mortalityPercentage));
                 return;  // Keluar dari fungsi setelah membuat data baru
             }
     
@@ -449,6 +437,7 @@ export default function DataAyam() {
     
                 const result = await updateResponse.json();
                 console.log('Mortalitas updated:', result);
+                setMortalitas(parseFloat(mortalityPercentage));
             } else {
                 console.log('Mortalitas tidak berubah, tidak perlu update');
             }
