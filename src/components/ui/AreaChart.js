@@ -92,11 +92,20 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
                 axisTicks: {
                     show: false,
                 },
+                title: {
+                    text: "Garis horizontal menunjukkan waktu", // Add the custom title for the x-axis
+                    style: {
+                        fontFamily: "Body Light, sans-serif",
+                        fontWeight: "light",
+                        fontSize: "14px",
+                        color: "#333"
+                    }
+                }
             },
             yaxis: {
                 title: {
                     text: `Tingkat ${dataType ? `${dataType.charAt(0).toUpperCase()}${dataType.slice(1)}` : "Data"}`,
-                    style: { fontFamily: "Body, sans-serif", fontSize: "14px", color: "#333" },
+                    style: { fontFamily: "Body Light, sans-serif", fontWeight: "light", fontSize: "14px", color: "#333" },
                 },
                 labels: {
                     show: false, // Hide Y-axis labels
