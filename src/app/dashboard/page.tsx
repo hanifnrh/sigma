@@ -15,6 +15,7 @@ import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { SensorBattery } from '@/components/ui/SensorBattery';
 import { SensorStatus } from '@/components/ui/SensorStatus';
+import StatCard from '@/components/ui/StatCard';
 import StatusIndicator from '@/components/ui/status-indicator';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
@@ -29,6 +30,7 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import { TbAtom2Filled } from "react-icons/tb";
 import { utils, writeFile } from "xlsx";
 import Navbar from "../navbar";
+
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 type Notification = {
     parameter: string;
@@ -40,7 +42,7 @@ type Notification = {
 };
 
 export default function Dashboard() {
-    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays } = useDataAyam();
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, targetTanggal } = useDataAyam();
     const pathname = usePathname(); // Get the current pathname
     const { notifications } = useNotifications();
     const {
@@ -55,16 +57,89 @@ export default function Dashboard() {
         status,
         warnings,
     } = useStats();
+
+    const getTemperatureIcon = (temp: number) =>
+        temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
+
+    const parameterCards = [
+        {
+            label: "Amonia",
+            value: `${ammonia ?? 0} ppm`,
+            icon: <TbAtom2Filled />,
+            statusColor: status.ammonia.color,
+            warning: warnings.ammonia,
+        },
+        {
+            label: "Suhu",
+            value: `${temperature ?? 0} °C`,
+            icon: getTemperatureIcon(temperature ?? 0),
+            statusColor: status.temperature.color,
+            warning: warnings.temperature,
+        },
+        {
+            label: "Kelembapan",
+            value: `${humidity ?? 0}%`,
+            icon: <IoWater />,
+            statusColor: status.humidity.color,
+            warning: warnings.humidity,
+        },
+    ];
+
+    const ayamDecreasePercentage =
+        jumlahAwalAyam > 0 ? ((jumlahAwalAyam - jumlahAyam) / jumlahAwalAyam) * 100 : 0;
+
+    const daysToTarget = targetTanggal
+        ? Math.floor((targetTanggal.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) - ageInDays
+        : null;
+
+    const getAgeStatusColor = () => {
+        if (daysToTarget !== null) {
+            if (daysToTarget > 14) return "text-red-500";
+            if (daysToTarget > 7) return "text-yellow-500";
+            if (daysToTarget > 0) return "text-blue-500";
+            return "text-green-500";
+        }
+        return "text-black";
+    };
+
+    const generalCards = [
+        {
+            label: "Mortalitas Ayam",
+            value: `${mortalitas}%`,
+            icon: <BsHeartPulse />,
+            statusColor: mortalitas > 5 ? "text-red-500" : "text-green-500",
+            warning: mortalitas > 5 ? "Bahaya, mortalitas ayam sudah melewati batas!" : "",
+        },
+        {
+            label: "Jumlah Ayam",
+            value: `${jumlahAyam}`,
+            icon: <GiRooster />,
+            statusColor: ayamDecreasePercentage > 5 ? "text-red-500" : "text-green-500",
+            warning:
+                ayamDecreasePercentage > 5 ? "Bahaya, jumlah ayam berkurang banyak!" : "",
+        },
+        {
+            label: "Usia Ayam",
+            value: `${ageInDays} hari`,
+            icon: <FaRegCalendarAlt />,
+            statusColor: getAgeStatusColor(),
+            warning:
+                daysToTarget !== null && daysToTarget <= 7
+                    ? `${daysToTarget} hari lagi untuk panen.`
+                    : "",
+        },
+    ];
+
     const getStatusGradient = (statusText: string) => {
         switch (statusText) {
             case "Sangat Baik":
                 return "bg-[linear-gradient(107deg,#16CC53_8.32%,#108496_60.18%,#35B6CA_105.75%)]";
             case "Baik":
-                return "bg-[linear-gradient(107deg,#3B82F6_8.32%,#1D4ED8_60.18%,#1E40AF_105.75%)]"; // Blue gradient
+                return "bg-[linear-gradient(107deg,#3B82F6_8.32%,#1D4ED8_60.18%,#1E40AF_105.75%)]";
             case "Buruk":
-                return "bg-[linear-gradient(107deg,#FBBF24_8.32%,#F59E0B_60.18%,#D97706_105.75%)]"; // Yellow gradient
+                return "bg-[linear-gradient(107deg,#FBBF24_8.32%,#F59E0B_60.18%,#D97706_105.75%)]";
             case "Bahaya":
-                return "bg-[linear-gradient(107deg,#EF4444_8.32%,#B91C1C_60.18%,#7F1D1D_105.75%)]"; // Red gradient
+                return "bg-[linear-gradient(107deg,#EF4444_8.32%,#B91C1C_60.18%,#7F1D1D_105.75%)]";
             default:
                 return "";
         }
@@ -73,12 +148,12 @@ export default function Dashboard() {
         const timestamp = new Date().toLocaleString();
         const data = [
             {
-                Amonia: ammonia, // Replace with actual amonia data
-                Suhu: temperature, // Replace with actual temperature data
-                Kelembapan: humidity, // Replace with actual humidity data
-                UsiaAyam: ageInDays, // Replace with actual ageInDays data
-                Mortalitas: mortalitas, // Replace with actual mortalitas data
-                JumlahAyam: jumlahAyam, // Replace with actual jumlahAyam data
+                Amonia: ammonia,
+                Suhu: temperature,
+                Kelembapan: humidity,
+                UsiaAyam: ageInDays,
+                Mortalitas: mortalitas,
+                JumlahAyam: jumlahAyam,
                 Timestamp: timestamp,
             },
         ];
@@ -87,9 +162,6 @@ export default function Dashboard() {
         utils.book_append_sheet(wb, ws, "StatsData");
         writeFile(wb, "Dashboard.xlsx");
     };
-
-    const getTemperatureIcon = (temp: number) =>
-        temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
 
     return (
         <main className="bg-white dark:bg-zinc-900 w-full">
@@ -172,55 +244,21 @@ export default function Dashboard() {
 
                         <div className="flex justify-between items-center w-full p-4">
                             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                                {[
-                                    { label: "Amonia", value: `${ammonia ?? 0} ppm`, icon: <TbAtom2Filled />, status: status.ammonia, warning: warnings.ammonia },
-                                    { label: "Suhu", value: `${temperature ?? 0} °C`, icon: getTemperatureIcon(temperature ?? 0), status: status.temperature, warning: warnings.temperature },
-                                    { label: "Kelembapan", value: `${humidity ?? 0}%`, icon: <IoWater />, status: status.humidity, warning: warnings.humidity },
-                                ].map(({ label, value, icon, status, warning }) => (
-                                    <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
-                                        <div className="flex items-center">
-                                            <div className="flex h-[90px] w-auto items-center">
-                                                <div className="rounded-full bg-lightPrimary dark:bg-navy-700">
-                                                    <span className="flex items-center text-brand-500 dark:text-white text-4xl">
-                                                        {icon}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="ml-4 flex flex-col justify-center">
-                                                <p className="font-dm text-xl font-medium text-gray-600 dark:text-white">{label}</p>
-                                                <h4 className={`text-3xl body-bold ${status.color}`}>{value}</h4>
-                                            </div>
-                                        </div>
-                                        {warning && <p className={`${status.color} text-sm text-center`}>{warning}</p>}
-                                    </div>
+                                {parameterCards.map(({ label, value, icon, statusColor, warning }) => (
+                                    <StatCard key={label} label={label} value={value} icon={icon} statusColor={statusColor} warning={warning} />
                                 ))}
                             </div>
                         </div>
+
                         <div className="flex justify-between items-center w-full p-4">
                             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                                {[
-                                    { label: "Usia Ayam", value: `${ageInDays} hari`, icon: <FaRegCalendarAlt /> },
-                                    { label: "Jumlah Ayam", value: `${jumlahAyam}`, icon: <GiRooster /> },
-                                    { label: "Mortalitas", value: `${mortalitas}%`, icon: <BsHeartPulse /> },
-                                ].map(({ label, value, icon }) => (
-                                    <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
-                                        <div className="flex items-center">
-                                            <div className="flex h-[90px] w-auto items-center">
-                                                <div className="rounded-full bg-lightPrimary dark:bg-navy-700">
-                                                    <span className="flex items-center text-brand-500 dark:text-white text-4xl">
-                                                        {icon}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="ml-4 flex flex-col justify-center">
-                                                <p className="font-dm text-xl font-medium text-gray-600 dark:text-white">{label}</p>
-                                                <h4 className={`text-3xl body-bold text-blue-500`}>{value}</h4>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {generalCards.map(({ label, value, icon, statusColor, warning }) => (
+                                    <StatCard key={label} label={label} value={value} icon={icon} statusColor={statusColor} warning={warning} />
                                 ))}
                             </div>
                         </div>
+
+
                         <div className="status-container flex items-center justify-center py-4 border-b w-full">
                             <div className="status-wrapper grid grid-cols-2 xl:grid-cols-4 gap-4">
                                 <div className="status flex items-center justify-center">

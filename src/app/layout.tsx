@@ -1,6 +1,5 @@
 import { DataAyamProvider } from '@/components/DataAyamContext';
 import { NotificationProvider } from '@/components/NotificationContext';
-import { ParameterProvider } from "@/components/ParameterContext";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { StatsProvider } from '@/components/StatsContext';
 import type { Metadata } from "next";
@@ -29,9 +28,7 @@ export default function RootLayout({
           <ServiceWorkerRegister></ServiceWorkerRegister>
           <StatsProvider>
             <DataAyamProvider>
-              <ParameterProvider>
                 {children}
-              </ParameterProvider>
             </DataAyamProvider>
           </StatsProvider>
         </NotificationProvider>
