@@ -1,5 +1,5 @@
 "use client";
-import { useStats } from "@/components/StatsContext";
+import { useDataContext } from "@/components/DataContext";
 import { Button } from '@/components/ui/button';
 import Dynamic from '@/components/ui/Dynamic';
 import withIconStyles from "@/components/ui/withIconStyles";
@@ -19,7 +19,7 @@ import { RxDashboard } from "react-icons/rx";
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const currentPath = usePathname();
-    const { overallStatus } = useStats();
+    const { overallStatus } = useDataContext();
 
     const getStatusColor = (statusText: string) => ({
         "Sangat Baik": "bg-customGreen",

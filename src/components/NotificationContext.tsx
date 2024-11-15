@@ -2,7 +2,7 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 type Notification = {
-    parameter: string;
+    data: string;
     status: string;
     timestamp: Date;
     message: string;

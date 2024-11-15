@@ -1,7 +1,6 @@
-import { DataAyamProvider } from '@/components/DataAyamContext';
+import { DataProvider } from '@/components/DataContext';
 import { NotificationProvider } from '@/components/NotificationContext';
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import { StatsProvider } from '@/components/StatsContext';
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -26,11 +25,9 @@ export default function RootLayout({
       <body>
         <NotificationProvider>
           <ServiceWorkerRegister></ServiceWorkerRegister>
-          <StatsProvider>
-            <DataAyamProvider>
+            <DataProvider>
                 {children}
-            </DataAyamProvider>
-          </StatsProvider>
+            </DataProvider>
         </NotificationProvider>
       </body>
     </html>

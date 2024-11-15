@@ -1,9 +1,10 @@
 
 "use client";
-import { useDataAyam } from "@/components/DataAyamContext";
+import { useDataContext } from "@/components/DataContext";
 import { useNotifications } from "@/components/NotificationContext";
 import AyamCounter from '@/components/ui/AyamCounter';
 import { Button } from '@/components/ui/button';
+import DataAyamCard from '@/components/ui/DataAyamCard';
 import {
     Dialog,
     DialogClose,
@@ -46,40 +47,10 @@ type Notification = {
     icon: React.ReactNode;
     color: string;
 };
-interface CardProps {
-    title: string;
-    value: string | number; // value can be either string or number
-    Icon: React.ElementType; // Icon is a React component
-}
-
-const Card: React.FC<CardProps> = ({ title, value, Icon }) => (
-    <div>
-        <div className='uppercase navbar-title body-bold text-sm sm:text-xs mb-2'>
-            {title}
-        </div>
-        <div className="flex justify-between items-center">
-            <div className="w-full flex">
-                <div className="relative flex flex-grow flex-row items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white bg-clip-border shadow-md shadow-[#F3F3F3] dark:border-[#ffffff33] dark:bg-black dark:text-white dark:shadow-none py-7 px-10">
-                    <div className="flex h-[90px] w-auto flex-row items-center">
-                        <div className="rounded-full bg-lightPrimary dark:bg-navy-700">
-                            <span className="flex items-center text-brand-500 dark:text-white">
-                                <Icon size={50} />
-                            </span>
-                        </div>
-                    </div>
-                    <div className="h-50 ml-4 flex w-auto flex-col justify-center">
-                        <p className="text-2xl font-medium text-gray-600 dark:text-white">{title}</p>
-                        <h4 className="text-4xl body-bold text-blue-500 dark:text-blue-700">{value}</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-);
 
 export default function DataAyam() {
     // Use context values
-    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted } = useDataAyam();
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted, ayamDecreasePercentage, daysToTarget } = useDataContext();
 
     // Component-specific state
     const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
@@ -143,14 +114,6 @@ export default function DataAyam() {
             alert("Tanggal panen harus lebih dari hari ini.");
             return;
         }
-
-        // // Set kondisi untuk memeriksa apakah tanggal input sudah lewat dalam tahun ini
-        // // Jika target bulan dan tanggal lebih kecil dari bulan dan tanggal hari ini, maka set tahun target ke tahun depan
-        // if (target.getFullYear() === now.getFullYear() && target.getMonth() < now.getMonth()) {
-        //     target.setFullYear(now.getFullYear() + 1);
-        // } else if (target.getFullYear() === now.getFullYear() && target.getMonth() === now.getMonth() && target.getDate() <= now.getDate()) {
-        //     target.setFullYear(now.getFullYear() + 1);
-        // }
 
         // Set nilai awal ayam dan tanggal target
         setJumlahAwalAyam(initialCount);
@@ -224,9 +187,6 @@ export default function DataAyam() {
         }
     };
 
-
-
-    // Fungsi untuk mengirim data jumlah ayam dan tanggal panen ke API
     const postJumlahAyam = async (jumlahAyam: number, targetTanggal: Date, startDate: Date) => {
         const data = {
             jumlah_ayam_awal: jumlahAyam, // Anggap jumlah ayam awal sama dengan jumlah ayam yang dikirim
@@ -418,7 +378,6 @@ export default function DataAyam() {
         }
     };
 
-
     async function handleDeleteData() {
         try {
             // Ambil semua data ayam
@@ -459,7 +418,6 @@ export default function DataAyam() {
         }
     }
 
-
     function handleHarvest() {
         if (targetTanggal) {
             const today = new Date();
@@ -471,7 +429,6 @@ export default function DataAyam() {
         }
     }
 
-    // Confirm harvest action
     const confirmHarvest = async () => {
         setHarvested(true);
         setShowConfirmHarvestDialog(false); // Close dialog after confirming
@@ -480,6 +437,49 @@ export default function DataAyam() {
         await handleDeleteData();
         window.location.reload();
     };
+
+    const getAgeStatusColor = () => {
+        if (daysToTarget !== null) {
+            if (daysToTarget > 14) return "text-red-500";
+            if (daysToTarget > 7) return "text-yellow-500";
+            if (daysToTarget > 0) return "text-blue-500";
+            return "text-green-500";
+        }
+        return "text-black";
+    };
+
+    const generalCards = [
+        {
+            title: "MORTALITAS AYAM",
+            label: "Mortalitas Ayam",
+            value: `${mortalitas}%`,
+            icon: <BsHeartPulse />,
+            statusColor: mortalitas > 5 ? "text-red-500" : "text-green-500",
+            warning: mortalitas > 5 ? "Bahaya, mortalitas ayam sudah melewati batas!" : "",
+        },
+        {
+            title: "JUMLAH AYAM",
+            label: "Jumlah Ayam",
+            value: `${jumlahAyam}`,
+            icon: <GiRooster />,
+            statusColor: ayamDecreasePercentage > 5 ? "text-red-500" : "text-green-500",
+            warning:
+                ayamDecreasePercentage > 5 ? "Bahaya, jumlah ayam berkurang banyak!" : "",
+        },
+        {
+            title: "USIA AYAM",
+            label: "Usia Ayam",
+            value: `${ageInDays} hari`,
+            icon: <FaRegCalendarAlt />,
+            statusColor: getAgeStatusColor(),
+            warning:
+                farmingStarted && daysToTarget !== null && daysToTarget <= 7
+                    ? `${daysToTarget} hari lagi untuk panen.`
+                    : farmingStarted && !targetTanggal
+                    ? "Target panen belum diatur."
+                    : "", // If farming started but no target date, show message
+        },
+    ];
 
     return (
         <main className="w-full bg-white dark:bg-zinc-900 relative">
@@ -497,7 +497,7 @@ export default function DataAyam() {
                             <div className="relative mr-4">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger className='p-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
-                                        <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.parameter}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
+                                        <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.data}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
                                         {notifications.length > 0 && (
                                             <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500"></span>
                                         )}
@@ -512,7 +512,7 @@ export default function DataAyam() {
                                                 </div>
                                                 <div className='flex flex-col items-start w-full'>
                                                     <div>
-                                                        {notif.parameter}: <span className={`${notif.color} body-bold`}>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
+                                                        {notif.data}: <span className={`${notif.color} body-bold`}>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
                                                     </div>
                                                     <div>
                                                         {notif.message}
@@ -680,24 +680,13 @@ export default function DataAyam() {
                                 </div>
                             </div>
                         </div>
-                        <div className='w-full grid grid-cols-1 lg:grid-cols-3 gap-4 mt-10'>
-                            <Card
-                                title="Usia Ayam"
-                                value={farmingStarted ? `${ageInDays} hari` : "0"}
-                                Icon={FaRegCalendarAlt}
-                            />
-                            <Card
-                                title="Jumlah Ayam"
-                                value={jumlahAyam}
-                                Icon={GiRooster}
-                            />
-                            <Card
-                                title="Mortalitas Ayam"
-                                value={`${mortalitas}%`}
-                                Icon={BsHeartPulse}
-                            />
+                        <div className="flex justify-between items-center w-full mt-10">
+                            <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                                {generalCards.map(({ title, label, value, icon, statusColor, warning }) => (
+                                    <DataAyamCard key={label} title={title}  label={label} value={value} icon={icon} statusColor={statusColor} warning={warning} />
+                                ))}
+                            </div>
                         </div>
-
                         <div className='mt-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-4'>
                             <div className='w-full h-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
