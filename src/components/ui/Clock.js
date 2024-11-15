@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function Clock(props) {
     const [date, setDate] = useState(null);
-    const days = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+    const days = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
 
     useEffect(() => {
         // update the date once every second

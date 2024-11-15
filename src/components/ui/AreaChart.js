@@ -1,16 +1,43 @@
 "use client";
 
 import ApexCharts from 'apexcharts';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-const AreaChart = ({ id, color }) => {
+const AreaChart = ({ id, color, apiUrl, dataType }) => {
+    // Local state to hold the fetched data
+    const [chartData, setChartData] = useState({ seriesData: [], categories: [] });
+
+    // Fetch data based on the selected dataType (ammonia, temperature, humidity)
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(apiUrl); // Fetch data from the API
+                const data = await response.json();
+
+                // Get the last 5 data points from the API response
+                const lastFiveData = data.slice(-5);
+
+                // Extract the requested data type (ammonia, temperature, or humidity)
+                const seriesData = lastFiveData.map(item => item[dataType]); // Use dynamic dataType
+                const categories = lastFiveData.map(item => new Date(item.timestamp).toLocaleString()); // Timestamps as x-axis categories
+
+                setChartData({ seriesData, categories });
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+
+        fetchData();
+    }, [apiUrl, dataType]); // Run this effect when apiUrl or dataType changes
+
+    // Chart options using fetched data
     useEffect(() => {
         const options = {
             chart: {
                 maxHeight: "100%",
                 maxWidth: "100%",
                 type: "area",
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "Poppins, sans-serif",
                 dropShadow: {
                     enabled: false,
                 },
@@ -20,9 +47,7 @@ const AreaChart = ({ id, color }) => {
             },
             tooltip: {
                 enabled: true,
-                x: {
-                    show: false,
-                },
+                x: { format: "dd MMM yyyy HH:mm" }, // Format waktu di tooltip
             },
             fill: {
                 type: "gradient",
@@ -51,15 +76,15 @@ const AreaChart = ({ id, color }) => {
             },
             series: [
                 {
-                    name: "New users",
-                    data: [6500, 6418, 6456, 6526, 6356, 6456],
+                    name: dataType ? `${dataType.charAt(0).toUpperCase()}${dataType.slice(1)}` : "Data",
+                    data: chartData.seriesData,
                     color: color, // Use the passed color
                 },
             ],
             xaxis: {
-                categories: ['01 February', '02 February', '03 February', '04 February', '05 February', '06 February', '07 February'],
+                categories: chartData.categories, // Use fetched timestamps as x-axis categories
                 labels: {
-                    show: false,
+                    show: false,  // Show x-axis labels (timestamps)
                 },
                 axisBorder: {
                     show: false,
@@ -69,7 +94,13 @@ const AreaChart = ({ id, color }) => {
                 },
             },
             yaxis: {
-                show: false,
+                title: {
+                    text: `Tingkat ${dataType ? `${dataType.charAt(0).toUpperCase()}${dataType.slice(1)}` : "Data"}`,
+                    style: { fontFamily: "Body, sans-serif", fontSize: "14px", color: "#333" },
+                },
+                labels: {
+                    show: false, // Hide Y-axis labels
+                },
             },
         };
 
@@ -81,7 +112,7 @@ const AreaChart = ({ id, color }) => {
                 chart.destroy();
             };
         }
-    }, [id, color]); // Add color to dependencies
+    }, [id, color, chartData, dataType]); // Re-run when chartData or dataType changes
 
     return (
         <div id={id} className="h-full" />
