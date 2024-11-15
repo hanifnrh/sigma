@@ -1,5 +1,7 @@
 
 "use client";
+import { useDataAyam } from "@/components/DataAyamContext";
+import { useNotifications } from "@/components/NotificationContext";
 import AyamCounter from '@/components/ui/AyamCounter';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +24,6 @@ import {
 import GrafikMortalitas from '@/components/ui/GrafikMortalitas';
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from '@/components/ui/mode-toggle';
-import StatsWidget from '@/components/ui/stats';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from "react";
@@ -77,106 +78,23 @@ const Card: React.FC<CardProps> = ({ title, value, Icon }) => (
 );
 
 export default function DataAyam() {
-    const [overallStatus, setOverallStatus] = useState({ text: "Baik", color: "text-blue-500" });
-    const handleOverallStatusChange = (status: { text: string; color: string }) => {
-        setOverallStatus(status);
-    };
-    const [ageInDays, setAgeInDays] = useState<number>(0);
-    const [jumlahAyam, setJumlahAyam] = useState<number>(0);
+    // Use context values
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted } = useDataAyam();
+
+    // Component-specific state
     const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
-    const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null);
-    const [targetTanggal, setTargetTanggal] = useState<Date | null>(null);
     const [countdown, setCountdown] = useState<string>('');
     const [harvested, setHarvested] = useState(false);
     const [showConfirmHarvestDialog, setShowConfirmHarvestDialog] = useState(false);
-    const [farmingStarted, setFarmingStarted] = useState(false);
-    const [jumlahAwalAyam, setJumlahAwalAyam] = useState<number>(0); // Menyimpan jumlah ayam awal
-    const [mortalitas, setMortalitas] = useState<number>(0);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+    const [lastPostedDate, setLastPostedDate] = useState<string>("");
     const router = useRouter(); // Access the router
-
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch('http://localhost:8000/api/data-ayam/'); // Use the correct endpoint
-
-                // Check if the response status is okay (2xx)
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                // Ensure the data is an array (even if it has one item)
-                if (Array.isArray(data) && data.length > 0) {
-                    // Access the first item in the array if it's there
-                    const latestData = data[0];
-                    console.log("Fetched data:", latestData);
-
-                    const { tanggal_mulai, jumlah_ayam_awal, tanggal_panen, jumlah_ayam, mortalitas, usia_ayam } = latestData;
-
-                    setJumlahAwalAyam(jumlah_ayam_awal);
-                    setTanggalMulai(new Date(tanggal_mulai));
-                    setTargetTanggal(new Date(tanggal_panen)); // Convert to Date object
-                    setJumlahAyam(jumlah_ayam);
-                    setMortalitas(mortalitas);
-                    setAgeInDays(usia_ayam);
-
-                    setFarmingStarted(true);
-                } else {
-                    // If no data or invalid format, set all values to default (0)
-
-                    setJumlahAwalAyam(0);
-                    setTanggalMulai(new Date());
-                    setTargetTanggal(new Date()); // Default to current date
-                    setJumlahAyam(0);
-                    setMortalitas(0);
-                    setAgeInDays(0);
-
-                    setFarmingStarted(false);
-                }
-            } catch (error) {
-                console.error("Error fetching ayam data:", error);
-
-                // Log additional error details if available
-                if (error instanceof Error) {
-                    console.error("Error message:", error.message);
-                } else {
-                    console.error("Unexpected error:", error);
-                }
-
-                // Set default values when there's an error
-                setJumlahAwalAyam(0);
-                setTanggalMulai(new Date());
-                setTargetTanggal(new Date()); // Default to current date
-                setJumlahAyam(0);
-                setMortalitas(0);
-                setAgeInDays(0);
-
-                setFarmingStarted(false);
-            }
-        };
-
-        // Call fetchData immediately when the component mounts
-        fetchData();
-    }, [jumlahAyam, mortalitas]);
-
+    const { notifications } = useNotifications();
 
     const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
         setStatsData(data);
-    };
-
-    const handleNewNotification = (notif: Notification) => {
-        const exists = notifications.some(
-            (n) => n.parameter === notif.parameter && n.status === notif.status
-        );
-        if (!exists) {
-            setNotifications((prev) => [...prev, notif]); // Just add the notification as is
-        }
     };
 
     useEffect(() => {
@@ -185,21 +103,28 @@ export default function DataAyam() {
                 const startDate = new Date(tanggalMulai);
                 const harvestDate = new Date(targetTanggal);
                 const now = new Date();
-    
+
                 // Calculate the age in days
                 const ageInDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                 const daysUntilHarvest = Math.floor((harvestDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+
                 setAgeInDays(ageInDays);
                 setCountdown(`Tersisa ${daysUntilHarvest} hari untuk panen`);
+
+                // Cek jika usia ayam sudah berubah dan belum diposting hari ini
+                const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                if (today !== lastPostedDate) {
+                    setLastPostedDate(today);
+                    updateAgeInDays(ageInDays); // Lakukan post jika tanggal berbeda
+                }
             };
-    
+
             // Initial calculation of age
             calculateAge();
-    
+
             // Update age every day
             const ageInterval = setInterval(calculateAge, 1000 * 60 * 60 * 24); // Update every day
-    
+
             return () => clearInterval(ageInterval); // Cleanup when component unmounts
         }
     }, [farmingStarted, tanggalMulai, targetTanggal]);
@@ -209,16 +134,16 @@ export default function DataAyam() {
             alert("Please select a harvest date.");
             return;
         }
-    
+
         const now = new Date();
         const target = new Date(targetDate);
-    
+
         // Cek jika tanggal yang dipilih kurang dari hari ini
         if (target <= now) {
             alert("Tanggal panen harus lebih dari hari ini.");
             return;
         }
-    
+
         // // Set kondisi untuk memeriksa apakah tanggal input sudah lewat dalam tahun ini
         // // Jika target bulan dan tanggal lebih kecil dari bulan dan tanggal hari ini, maka set tahun target ke tahun depan
         // if (target.getFullYear() === now.getFullYear() && target.getMonth() < now.getMonth()) {
@@ -226,7 +151,7 @@ export default function DataAyam() {
         // } else if (target.getFullYear() === now.getFullYear() && target.getMonth() === now.getMonth() && target.getDate() <= now.getDate()) {
         //     target.setFullYear(now.getFullYear() + 1);
         // }
-    
+
         // Set nilai awal ayam dan tanggal target
         setJumlahAwalAyam(initialCount);
         setJumlahAyam(initialCount);
@@ -235,15 +160,15 @@ export default function DataAyam() {
         setCountdown(`Tersisa ${Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))} hari untuk panen`);
         setFarmingStarted(true);
         setDialogOpen(false);
-    
+
         // Panggil fungsi untuk menyimpan data ke API
         await postJumlahAyam(initialCount, target, now);
-    
+
         // Set timer countdown untuk menghitung sisa hari hingga panen
         const countdownInterval = setInterval(() => {
             const now = new Date();
             const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+
             if (diff < 0) {
                 clearInterval(countdownInterval);
                 setCountdown('Waktu panen telah tiba!');
@@ -251,11 +176,56 @@ export default function DataAyam() {
                 setCountdown(`Tersisa ${diff} hari untuk panen`);
             }
         }, 1000 * 60 * 60 * 24); // Update setiap hari
-    
+
         // Bersihkan interval saat komponen di-unmount atau timer di-reset
         return () => clearInterval(countdownInterval);
     }
-    
+
+    const updateAgeInDays = async (ageInDays: number) => {
+        const data = {
+            usia_ayam: ageInDays,  // Send the updated age
+        };
+
+        try {
+            // Fetch the existing record
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+
+            // If there's existing data, update it using the first (or only) record
+            if (allData.length > 0) {
+                const record = allData[0];  // Assuming there's only one record, we take the first one
+
+                // Send the PATCH request to update the age in the record
+                const updateResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await updateResponse.json();
+                if (!updateResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to update chicken age');
+                }
+
+                console.log('Age updated successfully:', result);
+            } else {
+                console.error('No ayam data found to update.');
+            }
+        } catch (error) {
+            console.error('Error updating age:', error);
+            alert('Terjadi kesalahan saat memperbarui usia ayam.');
+        }
+    };
+
+
+
     // Fungsi untuk mengirim data jumlah ayam dan tanggal panen ke API
     const postJumlahAyam = async (jumlahAyam: number, targetTanggal: Date, startDate: Date) => {
         const data = {
@@ -323,7 +293,7 @@ export default function DataAyam() {
                 }
 
                 console.log('Chicken count updated:', result);
-                setJumlahAyam(jumlahAyamBaru); 
+                setJumlahAyam(jumlahAyamBaru);
             } else {
                 // If no existing data, create new data
                 const createResponse = await fetch('http://localhost:8000/api/data-ayam/', {
@@ -347,7 +317,7 @@ export default function DataAyam() {
                 }
 
                 console.log('New chicken data created:', result);
-                setJumlahAyam(jumlahAyamBaru); 
+                setJumlahAyam(jumlahAyamBaru);
             }
 
         } catch (error) {
@@ -373,18 +343,18 @@ export default function DataAyam() {
         const mortalityPercentage = (JumlahAwalAyam > 0 && jumlahAyam > 0)
             ? (((JumlahAwalAyam - jumlahAyam) / JumlahAwalAyam) * 100).toFixed(1)
             : '0'; // Set ke 0 jika perhitungan tidak valid
-    
+
         const data = {
             mortalitas: parseFloat(mortalityPercentage), // Pastikan nilai mortalitas adalah angka
         };
-    
+
         try {
             // Ambil data ayam yang ada
             const response = await fetch('http://localhost:8000/api/data-ayam/');
             if (!response.ok) {
                 throw new Error('Failed to fetch ayam data');
             }
-    
+
             const allData = await response.json();
             if (allData.length === 0) {
                 console.log('Data ayam tidak ada, kemungkinan panen sudah selesai atau data sudah dihapus.');
@@ -402,22 +372,22 @@ export default function DataAyam() {
                         usia_ayam: 0                             // Usia ayam (0 untuk awal)
                     }),
                 });
-    
+
                 if (!createResponse.ok) {
                     const errorData = await createResponse.json();
                     console.error('Server response error:', errorData);
                     throw new Error('Failed to create new ayam data');
                 }
-    
+
                 const result = await createResponse.json();
                 console.log('New mortalitas data created:', result);
                 setMortalitas(parseFloat(mortalityPercentage));
                 return;  // Keluar dari fungsi setelah membuat data baru
             }
-    
+
             // Jika data ada, pastikan kita hanya memperbarui jika mortalitas berubah
             const record = allData[0];  // Mengambil data pertama
-    
+
             // Cek apakah mortalitas perlu diupdate
             if (record.mortalitas !== data.mortalitas) {
                 // Jika mortalitas berbeda, lakukan pembaruan
@@ -428,27 +398,27 @@ export default function DataAyam() {
                     },
                     body: JSON.stringify(data),
                 });
-    
+
                 if (!updateResponse.ok) {
                     const errorData = await updateResponse.json();
                     console.error('Server response error:', errorData);
                     throw new Error('Failed to update mortalitas');
                 }
-    
+
                 const result = await updateResponse.json();
                 console.log('Mortalitas updated:', result);
                 setMortalitas(parseFloat(mortalityPercentage));
             } else {
                 console.log('Mortalitas tidak berubah, tidak perlu update');
             }
-    
+
         } catch (error) {
             // console.error('Error:', error);
             // alert('Terjadi kesalahan saat memperbarui mortalitas.');
         }
     };
-    
-    
+
+
     async function handleDeleteData() {
         try {
             // Ambil semua data ayam
@@ -456,12 +426,12 @@ export default function DataAyam() {
             if (!response.ok) {
                 throw new Error('Failed to fetch ayam data');
             }
-    
+
             const allData = await response.json();
             if (allData.length > 0) {
                 // Mengambil ID ayam pertama yang ditemukan (atau bisa memilih berdasarkan kriteria lainnya)
                 const record = allData[0];  // Misalnya Anda ingin menghapus record pertama
-    
+
                 // Kirim permintaan DELETE berdasarkan ID
                 const deleteResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
                     method: 'DELETE',
@@ -469,10 +439,10 @@ export default function DataAyam() {
                         'Content-Type': 'application/json',
                     },
                 });
-    
+
                 if (deleteResponse.ok) {
                     console.log('Data ayam berhasil dihapus');
-    
+
                     // Setelah penghapusan, set mortalitas ke 0
                     await updateMortalitas(0, 0); // Reset mortalitas karena ayam sudah dihapus
                 } else {
@@ -488,7 +458,7 @@ export default function DataAyam() {
             alert('Terjadi kesalahan saat menghapus data ayam.');
         }
     }
-    
+
 
     function handleHarvest() {
         if (targetTanggal) {
@@ -747,9 +717,6 @@ export default function DataAyam() {
 
                     </div>
                 </div>
-            </div>
-            <div className='hidden'>
-                <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} onOverallStatusChange={handleOverallStatusChange} />
             </div>
         </main>
     );

@@ -1,4 +1,8 @@
+import { DataAyamProvider } from '@/components/DataAyamContext';
+import { NotificationProvider } from '@/components/NotificationContext';
+import { ParameterProvider } from "@/components/ParameterContext";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { StatsProvider } from '@/components/StatsContext';
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -21,8 +25,16 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body>
-        <ServiceWorkerRegister></ServiceWorkerRegister>
-        {children}
+        <NotificationProvider>
+          <ServiceWorkerRegister></ServiceWorkerRegister>
+          <StatsProvider>
+            <DataAyamProvider>
+              <ParameterProvider>
+                {children}
+              </ParameterProvider>
+            </DataAyamProvider>
+          </StatsProvider>
+        </NotificationProvider>
       </body>
     </html>
   );

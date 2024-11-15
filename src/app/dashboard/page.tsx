@@ -1,4 +1,7 @@
 "use client"
+import { useDataAyam } from "@/components/DataAyamContext";
+import { useNotifications } from "@/components/NotificationContext";
+import { useStats } from "@/components/StatsContext";
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -12,21 +15,20 @@ import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { SensorBattery } from '@/components/ui/SensorBattery';
 import { SensorStatus } from '@/components/ui/SensorStatus';
-import StatsWidget from '@/components/ui/stats';
 import StatusIndicator from '@/components/ui/status-indicator';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from "react";
 import { BsHeartPulse } from "react-icons/bs";
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { FaRegCalendarAlt, FaTemperatureHigh, FaTemperatureLow } from "react-icons/fa";
 import { GiRooster } from "react-icons/gi";
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
+import { IoWater } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
+import { TbAtom2Filled } from "react-icons/tb";
 import { utils, writeFile } from "xlsx";
 import Navbar from "../navbar";
-
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 type Notification = {
     parameter: string;
@@ -38,24 +40,21 @@ type Notification = {
 };
 
 export default function Dashboard() {
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays } = useDataAyam();
     const pathname = usePathname(); // Get the current pathname
-    const [jumlahAyam, setJumlahAyam] = useState<number>(0);
-    const [mortalitas, setMortalitas] = useState<number>(0);
-    const [ageInDays, setAgeInDays] = useState<number>(0);
-
-    useEffect(() => {
-        // Retrieve data from sessionStorage
-        const storedJumlahAyam = sessionStorage.getItem('jumlahAyam');
-        const storedMortalitas = sessionStorage.getItem('mortalitas');
-        const storedAgeInDays = sessionStorage.getItem('ageInDays');
-
-        // Update state with the retrieved values if they exist
-        if (storedJumlahAyam) setJumlahAyam(parseInt(storedJumlahAyam));
-        if (storedMortalitas) setMortalitas(parseFloat(storedMortalitas));
-        if (storedAgeInDays) setAgeInDays(parseInt(storedAgeInDays));
-    }, []);
-
-    const [overallStatus, setOverallStatus] = useState({ text: "Baik" });
+    const { notifications } = useNotifications();
+    const {
+        ammonia,
+        temperature,
+        humidity,
+        setAmmonia,
+        setTemperature,
+        setHumidity,
+        overallStatus,
+        setOverallStatus,
+        status,
+        warnings,
+    } = useStats();
     const getStatusGradient = (statusText: string) => {
         switch (statusText) {
             case "Sangat Baik":
@@ -70,33 +69,27 @@ export default function Dashboard() {
                 return "";
         }
     };
-    const handleOverallStatusChange = (status: { text: string }) => {
-        setOverallStatus(status);
-    };
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
-
-    const handleNewNotification = (notif: Notification) => {
-        const exists = notifications.some(
-            (n) => n.parameter === notif.parameter && n.status === notif.status
-        );
-        if (!exists) {
-            setNotifications((prev) => [...prev, notif]); // Just add the notification as is
-        }
-    };
-
-
     const handleDownload = () => {
-        const ws = utils.json_to_sheet(statsData);
+        const timestamp = new Date().toLocaleString();
+        const data = [
+            {
+                Amonia: ammonia, // Replace with actual amonia data
+                Suhu: temperature, // Replace with actual temperature data
+                Kelembapan: humidity, // Replace with actual humidity data
+                UsiaAyam: ageInDays, // Replace with actual ageInDays data
+                Mortalitas: mortalitas, // Replace with actual mortalitas data
+                JumlahAyam: jumlahAyam, // Replace with actual jumlahAyam data
+                Timestamp: timestamp,
+            },
+        ];
+        const ws = utils.json_to_sheet(data);
         const wb = utils.book_new();
         utils.book_append_sheet(wb, ws, "StatsData");
         writeFile(wb, "Dashboard.xlsx");
     };
 
-    const handleDataUpdate = (data: Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>) => {
-        setStatsData(data);
-    };
-
+    const getTemperatureIcon = (temp: number) =>
+        temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
 
     return (
         <main className="bg-white dark:bg-zinc-900 w-full">
@@ -172,12 +165,37 @@ export default function Dashboard() {
                                     USIA
                                 </div>
                                 <div className='text-2xl md:text-4xl title-head'>
-                                    24 Hari
+                                    {ageInDays} hari
                                 </div>
                             </div>
                         </div>
 
-                        <StatsWidget onNewNotification={handleNewNotification} onDataUpdate={handleDataUpdate} onOverallStatusChange={handleOverallStatusChange} />
+                        <div className="flex justify-between items-center w-full p-4">
+                            <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                                {[
+                                    { label: "Amonia", value: `${ammonia ?? 0} ppm`, icon: <TbAtom2Filled />, status: status.ammonia, warning: warnings.ammonia },
+                                    { label: "Suhu", value: `${temperature ?? 0} °C`, icon: getTemperatureIcon(temperature ?? 0), status: status.temperature, warning: warnings.temperature },
+                                    { label: "Kelembapan", value: `${humidity ?? 0}%`, icon: <IoWater />, status: status.humidity, warning: warnings.humidity },
+                                ].map(({ label, value, icon, status, warning }) => (
+                                    <div key={label} className="h-44 relative flex flex-grow flex-col items-center justify-center rounded-[10px] border-[1px] border-gray-200 bg-white shadow-md p-7">
+                                        <div className="flex items-center">
+                                            <div className="flex h-[90px] w-auto items-center">
+                                                <div className="rounded-full bg-lightPrimary dark:bg-navy-700">
+                                                    <span className="flex items-center text-brand-500 dark:text-white text-4xl">
+                                                        {icon}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="ml-4 flex flex-col justify-center">
+                                                <p className="font-dm text-xl font-medium text-gray-600 dark:text-white">{label}</p>
+                                                <h4 className={`text-3xl body-bold ${status.color}`}>{value}</h4>
+                                            </div>
+                                        </div>
+                                        {warning && <p className={`${status.color} text-sm text-center`}>{warning}</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                         <div className="flex justify-between items-center w-full p-4">
                             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                                 {[
