@@ -20,7 +20,7 @@ export default function GrafikKeseluruhan() {
                     </div>
                 </div>
             </div>
-            <AreaChart id="area-chart3" color="#765DFF" apiUrl="http://127.0.0.1:8000/api/parameters/" dataType="score" />
+            <AreaChart id="averageScore" color="#765DFF" apiUrl="http://127.0.0.1:8000/api/parameters/" dataType="score" />
         </main>
     );
 }

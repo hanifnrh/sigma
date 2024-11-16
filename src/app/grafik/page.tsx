@@ -1,4 +1,5 @@
 "use client";
+import { useDataContext } from "@/components/DataContext";
 import { useNotifications } from "@/components/NotificationContext";
 import { Button } from '@/components/ui/button';
 import {
@@ -9,23 +10,59 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import GrafikAmonia from '@/components/ui/GrafikAmonia';
-import GrafikKelembapan from '@/components/ui/GrafikKelembapan';
-import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
-import GrafikSuhu from '@/components/ui/GrafikSuhu';
+import GrafikCard from "@/components/ui/GrafikCard";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import dynamic from 'next/dynamic';
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
-
 import Navbar from "../navbar";
 
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 
 export default function Grafik() {
     const { notifications } = useNotifications();
+    const { ammonia, temperature, humidity, status, statusAndColor, averageScore } = useDataContext();
+
+    const grafikData = [
+        {
+            title: "Keseluruhan",
+            value: averageScore ?? 0, // Contoh rata-rata
+            statusColor: statusAndColor?.color || "text-gray-500",
+            statusText: statusAndColor?.status || "N/A",
+            chartId: "overall",
+            apiUrl: "http://127.0.0.1:8000/api/parameters/",
+            dataType: "score",
+        },
+        {
+            title: "Amonia",
+            value: ammonia ?? 0,
+            statusColor: status.ammonia.color || "text-gray-500",
+            statusText: status.ammonia.text || "N/A",
+            chartId: "ammonia",
+            apiUrl: "http://127.0.0.1:8000/api/parameters/",
+            dataType: "ammonia",
+        },
+        {
+            title: "Suhu",
+            value: temperature ?? 0,
+            statusColor: status.temperature.color || "text-gray-500",
+            statusText: status.temperature.text || "N/A",
+            chartId: "temperature",
+            apiUrl: "http://127.0.0.1:8000/api/parameters/",
+            dataType: "temperature",
+        },
+        {
+            title: "Kelembapan",
+            value: humidity ?? 0,
+            statusColor: status.humidity.color || "text-gray-500",
+            statusText: status.humidity.text || "N/A",
+            chartId: "humidity",
+            apiUrl: "http://127.0.0.1:8000/api/parameters/",
+            dataType: "humidity",
+        },
+    ];
     return (
         <main className="bg-white dark:bg-zinc-900 w-full relative">
             <Navbar />
@@ -42,7 +79,7 @@ export default function Grafik() {
                             <div className="relative mr-4">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger className='p-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'>
-                                        <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.parameter}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
+                                        <IoIosNotificationsOutline className="dark:text-white cursor-pointer text-xl sm:text-2xl" onClick={() => alert(notifications.map(notif => `${notif.data}: ${notif.status} - ${notif.timestamp.toLocaleTimeString()}`).join("\n"))} />
                                         {notifications.length > 0 && (
                                             <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500"></span>
                                         )}
@@ -57,7 +94,7 @@ export default function Grafik() {
                                                 </div>
                                                 <div className='flex flex-col items-start w-full'>
                                                     <div>
-                                                        {notif.parameter}: <span className={`${notif.color} body-bold`}>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
+                                                        {notif.data}: <span className={`${notif.color} body-bold`}>{notif.status}</span> - {notif.timestamp.toLocaleTimeString()}
                                                     </div>
                                                     <div>
                                                         {notif.message}
@@ -101,20 +138,13 @@ export default function Grafik() {
                     </div>
                 </div>
 
-                <div className="page flex justify-between w-full ">
+                <div className="page flex justify-between w-full">
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4 w-full">
-                        <div>
-                            <GrafikKeseluruhan />
-                        </div>
-                        <div>
-                            <GrafikAmonia />
-                        </div>
-                        <div>
-                            <GrafikSuhu />
-                        </div>
-                        <div>
-                            <GrafikKelembapan />
-                        </div>
+                        {grafikData.map((grafik) => (
+                            <div key={grafik.chartId}>
+                                <GrafikCard {...grafik} />
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

@@ -7,28 +7,40 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
     // Local state to hold the fetched data
     const [chartData, setChartData] = useState({ seriesData: [], categories: [] });
 
-    // Fetch data based on the selected dataType (ammonia, temperature, humidity)
+    const dataTypeMapping = {
+        ammonia: "Amonia",
+        temperature: "Suhu",
+        humidity: "Kelembapan",
+        score: "Skor",
+        mortalitas: "Mortalitas",
+    };
+    const dataTypeLabel = dataTypeMapping[dataType] || "Data";
+    
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await fetch(apiUrl); // Fetch data from the API
                 const data = await response.json();
-
-                // Get the last 5 data points from the API response
-                const lastFiveData = data.slice(-5);
-
+    
+                // Sort data by timestamp in ascending order
+                const sortedData = data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+                // Get the last 5 data points from the sorted data
+                const lastFiveData = sortedData.slice(-5);
+    
                 // Extract the requested data type (ammonia, temperature, or humidity)
                 const seriesData = lastFiveData.map(item => item[dataType]); // Use dynamic dataType
                 const categories = lastFiveData.map(item => new Date(item.timestamp).toLocaleString()); // Timestamps as x-axis categories
-
+    
                 setChartData({ seriesData, categories });
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
-
+    
         fetchData();
     }, [apiUrl, dataType]); // Run this effect when apiUrl or dataType changes
+    
 
     // Chart options using fetched data
     useEffect(() => {
@@ -37,7 +49,7 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
                 maxHeight: "100%",
                 maxWidth: "100%",
                 type: "area",
-                fontFamily: "Poppins, sans-serif",
+                fontFamily: "Body Light, sans-serif",
                 dropShadow: {
                     enabled: false,
                 },
@@ -47,15 +59,17 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
             },
             tooltip: {
                 enabled: true,
-                x: { format: "dd MMM yyyy HH:mm" }, // Format waktu di tooltip
+                x: {
+                    show: false,
+                },
             },
             fill: {
                 type: "gradient",
                 gradient: {
                     opacityFrom: 0.55,
                     opacityTo: 0,
-                    shade: color,  // Use the passed color
-                    gradientToColors: [color], // Use the passed color
+                    shade: color,
+                    gradientToColors: [color],
                 },
             },
             dataLabels: {
@@ -63,7 +77,7 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
             },
             stroke: {
                 width: 6,
-                colors: [color], // Set the stroke color to the passed color
+                colors: [color],
             },
             grid: {
                 show: false,
@@ -76,15 +90,15 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
             },
             series: [
                 {
-                    name: dataType ? `${dataType.charAt(0).toUpperCase()}${dataType.slice(1)}` : "Data",
+                    name: dataTypeLabel,
                     data: chartData.seriesData,
-                    color: color, // Use the passed color
+                    color: color,
                 },
             ],
             xaxis: {
-                categories: chartData.categories, // Use fetched timestamps as x-axis categories
+                categories: chartData.categories,
                 labels: {
-                    show: false,  // Show x-axis labels (timestamps)
+                    show: false,
                 },
                 axisBorder: {
                     show: false,
@@ -93,7 +107,7 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
                     show: false,
                 },
                 title: {
-                    text: "Garis horizontal menunjukkan waktu", // Add the custom title for the x-axis
+                    text: "Garis horizontal menunjukkan waktu",
                     style: {
                         fontFamily: "Body Light, sans-serif",
                         fontWeight: "light",
@@ -104,11 +118,11 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
             },
             yaxis: {
                 title: {
-                    text: `Tingkat ${dataType ? `${dataType.charAt(0).toUpperCase()}${dataType.slice(1)}` : "Data"}`,
+                    text: `Tingkat ${dataTypeLabel}`,
                     style: { fontFamily: "Body Light, sans-serif", fontWeight: "light", fontSize: "14px", color: "#333" },
                 },
                 labels: {
-                    show: false, // Hide Y-axis labels
+                    show: false,
                 },
             },
         };
@@ -121,7 +135,7 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
                 chart.destroy();
             };
         }
-    }, [id, color, chartData, dataType]); // Re-run when chartData or dataType changes
+    }, [id, color, chartData, dataType]);
 
     return (
         <div id={id} className="h-full" />

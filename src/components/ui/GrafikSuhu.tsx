@@ -1,5 +1,3 @@
-// page.tsx
-
 "use client";
 import { useDataContext } from "@/components/DataContext";
 import dynamic from 'next/dynamic';
@@ -20,7 +18,7 @@ export default function GrafikSuhu() {
                     </div>
                 </div>
             </div>
-            <AreaChart id="suhu" color="#FFC107" apiUrl="http://127.0.0.1:8000/api/parameters/" dataType="temperature" />
+            <AreaChart id="temperature" color="#FFC107" apiUrl="http://127.0.0.1:8000/api/parameters/" dataType="temperature" />
         </main>
     );
 }

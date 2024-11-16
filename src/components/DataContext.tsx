@@ -28,8 +28,6 @@ interface DataAyamContextType {
     ayamDecreasePercentage: number;
     daysToTarget: number | null;
     statusAyam: { mortalitas: Status; daysToTarget: Status; ayamDecreasePercentage: Status };
-    averageScore: number | null;
-    setAverageScore: (averageScore: number) => void;
 }
 
 type StatsContextType = {
@@ -44,6 +42,7 @@ type StatsContextType = {
     status: { ammonia: Status; temperature: Status; humidity: Status };
     warnings: { ammonia: string; temperature: string; humidity: string };
     averageScore: number | null;
+    setAverageScore: (averageScore: number) => void;
     statusAndColor: { status: string; color: string } | null;
 };
 
