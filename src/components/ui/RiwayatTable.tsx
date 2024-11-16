@@ -1,3 +1,4 @@
+import { useDataContext } from "@/components/DataContext";
 import { Card, CardContent } from "@/components/ui/card";
 import {
     Table,
@@ -7,45 +8,87 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useEffect, useState } from "react";
 import { Button } from "./button";
 
-const head = [
-    {
-        waktu: "12/10/2024 05:00",
-        suhu: "27°C",
-        kelembapan: "55%",
-        amonia: "19ppm",
-        skor: "93.8",
-        status: "Sangat Baik",
-    },
-    {
-        waktu: "12/10/2024 05:00",
-        suhu: "27°C",
-        kelembapan: "55%",
-        amonia: "19ppm",
-        skor: "87.0",
-        status: "Baik",
-    },
-    {
-        waktu: "12/10/2024 05:00",
-        suhu: "27°C",
-        kelembapan: "55%",
-        amonia: "19ppm",
-        skor: "70.5",
-        status: "Buruk",
-    },
-    {
-        waktu: "12/10/2024 05:00",
-        suhu: "27°C",
-        kelembapan: "55%",
-        amonia: "19ppm",
-        skor: "40.3",
-        status: "Bahaya",
-    },
-];
-
 export function RiwayatTable() {
-    // Fungsi untuk menentukan varian button
+    const {
+        overallStatus,
+        averageScore,
+        historyData,
+        historyParameter,
+    } = useDataContext();
+
+    // State for combined history
+    const [combinedHistory, setCombinedHistory] = useState<any[]>([]);
+
+    useEffect(() => {
+        const mergeData = () => {
+            const merged: any[] = [];
+            let i = 0;
+            let j = 0;
+
+            while (i < historyParameter.length && j < historyData.length) {
+                const param = historyParameter[i];
+                const ayam = historyData[j];
+
+                // Compare timestamps, merge data if they match
+                if (new Date(param.timestamp).getTime() === new Date(ayam.timestamp).getTime()) {
+                    merged.push({
+                        ...param,
+                        ...ayam,
+                    });
+                    i++;
+                    j++;
+                } else if (new Date(param.timestamp).getTime() < new Date(ayam.timestamp).getTime()) {
+                    merged.push({
+                        ...param,
+                        jumlah_ayam: null,
+                        mortalitas: null,
+                        usia_ayam: null,
+                    });
+                    i++;
+                } else {
+                    merged.push({
+                        ...ayam,
+                        temperature: null,
+                        humidity: null,
+                        ammonia: null,
+                        averageScore: null,
+                    });
+                    j++;
+                }
+            }
+
+            // Add remaining items from historyParameter
+            while (i < historyParameter.length) {
+                merged.push({
+                    ...historyParameter[i],
+                    jumlah_ayam: null,
+                    mortalitas: null,
+                    usia_ayam: null,
+                });
+                i++;
+            }
+
+            // Add remaining items from historyData
+            while (j < historyData.length) {
+                merged.push({
+                    ...historyData[j],
+                    temperature: null,
+                    humidity: null,
+                    ammonia: null,
+                    averageScore: null,
+                });
+                j++;
+            }
+
+            setCombinedHistory(merged);
+        };
+
+        mergeData();
+    }, [historyParameter, historyData]); // Re-run when either history changes
+
     const getButtonVariant = (status: string) => {
         switch (status) {
             case "Sangat Baik":
@@ -71,21 +114,27 @@ export function RiwayatTable() {
                             <TableHead>Suhu</TableHead>
                             <TableHead>Kelembapan</TableHead>
                             <TableHead>Amonia</TableHead>
+                            <TableHead>Jumlah Ayam</TableHead>
+                            <TableHead>Mortalitas</TableHead>
+                            <TableHead>Usia Ayam</TableHead>
                             <TableHead>Skor</TableHead>
                             <TableHead>Status</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {head.map((item, index) => (
+                        {combinedHistory.map((item, index) => (
                             <TableRow key={index}>
-                                <TableCell className="font-medium">{item.waktu}</TableCell>
-                                <TableCell className="font-medium">{item.suhu}</TableCell>
-                                <TableCell className="font-medium">{item.kelembapan}</TableCell>
-                                <TableCell className="font-medium">{item.amonia}</TableCell>
-                                <TableCell className="font-medium">{item.skor}</TableCell>
+                                <TableCell className="font-medium">{new Date(item.timestamp).toLocaleString()}</TableCell>
+                                <TableCell className="font-medium">{item.temperature}</TableCell>
+                                <TableCell className="font-medium">{item.humidity}</TableCell>
+                                <TableCell className="font-medium">{item.ammonia}</TableCell>
+                                <TableCell className="font-medium">{item.jumlah_ayam}</TableCell>
+                                <TableCell className="font-medium">{item.mortalitas}</TableCell>
+                                <TableCell className="font-medium">{item.usia_ayam}</TableCell>
+                                <TableCell className="font-medium">{averageScore}</TableCell>
                                 <TableCell>
-                                    <Button variant={getButtonVariant(item.status)}>
-                                        {item.status}
+                                    <Button variant={getButtonVariant(overallStatus.text)}>
+                                        {overallStatus.text}
                                     </Button>
                                 </TableCell>
                             </TableRow>

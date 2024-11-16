@@ -17,26 +17,31 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
     const dataTypeLabel = dataTypeMapping[dataType] || "Data";
     
     useEffect(() => {
+
         const fetchData = async () => {
             try {
                 const response = await fetch(apiUrl); // Fetch data from the API
                 const data = await response.json();
-    
+        
+                // Log data to check the structure
+                console.log('Fetched data:', data);
+        
                 // Sort data by timestamp in ascending order
                 const sortedData = data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    
+        
                 // Get the last 5 data points from the sorted data
                 const lastFiveData = sortedData.slice(-5);
-    
+        
                 // Extract the requested data type (ammonia, temperature, or humidity)
                 const seriesData = lastFiveData.map(item => item[dataType]); // Use dynamic dataType
                 const categories = lastFiveData.map(item => new Date(item.timestamp).toLocaleString()); // Timestamps as x-axis categories
-    
+        
                 setChartData({ seriesData, categories });
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
+        
     
         fetchData();
     }, [apiUrl, dataType]); // Run this effect when apiUrl or dataType changes

@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
+import GrafikCard from "@/components/ui/GrafikCard";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { SensorBattery } from '@/components/ui/SensorBattery';
 import { SensorStatus } from '@/components/ui/SensorStatus';
@@ -41,7 +41,7 @@ type Notification = {
 };
 
 export default function Dashboard() {
-    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, targetTanggal } = useDataContext();
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, targetTanggal, statusAndColor, averageScore } = useDataContext();
     const pathname = usePathname(); // Get the current pathname
     const { notifications } = useNotifications();
     const {
@@ -56,6 +56,18 @@ export default function Dashboard() {
         status,
         warnings,
     } = useDataContext();
+
+    const grafikData = [
+        {
+            title: "Skor Keseluruhan",
+            value: averageScore ?? 0, // Contoh rata-rata
+            statusColor: statusAndColor?.color || "text-gray-500",
+            statusText: statusAndColor?.status || "N/A",
+            chartId: "overall",
+            apiUrl: "http://127.0.0.1:8000/api/parameters/",
+            dataType: "score",
+        }
+    ];
 
     const getTemperatureIcon = (temp: number) =>
         temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
@@ -233,10 +245,10 @@ export default function Dashboard() {
                             </div>
                             <div className='border-l px-5'>
                                 <div className='navbar-title body-bold text-sm sm:text-xs'>
-                                    USIA
+                                    SKOR TOTAL
                                 </div>
-                                <div className='text-2xl md:text-4xl title-head'>
-                                    {ageInDays} hari
+                                <div className={`text-2xl md:text-4xl title-head ${statusAndColor?.color}`}>
+                                    {averageScore}
                                 </div>
                             </div>
                         </div>
@@ -286,7 +298,11 @@ export default function Dashboard() {
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     GRAFIK KESELURUHAN
                                 </p>
-                                <GrafikKeseluruhan />
+                                {grafikData.map((grafik) => (
+                                    <div key={grafik.chartId}>
+                                        <GrafikCard {...grafik} />
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

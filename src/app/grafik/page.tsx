@@ -12,14 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import GrafikCard from "@/components/ui/GrafikCard";
 import { ModeToggle } from '@/components/ui/mode-toggle';
-import dynamic from 'next/dynamic';
 import { GrMapLocation } from "react-icons/gr";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Navbar from "../navbar";
-
-const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 
 export default function Grafik() {
     const { notifications } = useNotifications();
@@ -27,7 +24,7 @@ export default function Grafik() {
 
     const grafikData = [
         {
-            title: "Keseluruhan",
+            title: "Skor Keseluruhan",
             value: averageScore ?? 0, // Contoh rata-rata
             statusColor: statusAndColor?.color || "text-gray-500",
             statusText: statusAndColor?.status || "N/A",

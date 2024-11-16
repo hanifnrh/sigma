@@ -22,7 +22,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import GrafikMortalitas from '@/components/ui/GrafikMortalitas';
+import GrafikCard from "@/components/ui/GrafikCard";
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import dynamic from 'next/dynamic';
@@ -37,7 +37,6 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Navbar from "../navbar";
 
-
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 type Notification = {
     parameter: string;
@@ -50,7 +49,7 @@ type Notification = {
 
 export default function DataAyam() {
     // Use context values
-    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted, ayamDecreasePercentage, daysToTarget } = useDataContext();
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted, ayamDecreasePercentage, daysToTarget, statusAyam, ayamId } = useDataContext();
 
     // Component-specific state
     const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
@@ -418,6 +417,21 @@ export default function DataAyam() {
         }
     }
 
+    const grafikData = [
+        {
+            title: "Mortalitas",
+            value: mortalitas ?? 0, // Contoh rata-rata
+            statusColor: statusAyam.mortalitas.color || "text-gray-500",
+            statusText: statusAyam.mortalitas.text || "N/A",
+            chartId: "mortalitas",
+            apiUrl: `http://localhost:8000/api/data-ayam/${ayamId}/history/`,
+            dataType: "mortalitas",
+        }
+    ];
+
+    console.log('Ayam ID:', ayamId);
+
+
     function handleHarvest() {
         if (targetTanggal) {
             const today = new Date();
@@ -476,8 +490,8 @@ export default function DataAyam() {
                 farmingStarted && daysToTarget !== null && daysToTarget <= 7
                     ? `${daysToTarget} hari lagi untuk panen.`
                     : farmingStarted && !targetTanggal
-                    ? "Target panen belum diatur."
-                    : "", // If farming started but no target date, show message
+                        ? "Target panen belum diatur."
+                        : "", // If farming started but no target date, show message
         },
     ];
 
@@ -683,7 +697,7 @@ export default function DataAyam() {
                         <div className="flex justify-between items-center w-full mt-10">
                             <div className="w-full grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                                 {generalCards.map(({ title, label, value, icon, statusColor, warning }) => (
-                                    <DataAyamCard key={label} title={title}  label={label} value={value} icon={icon} statusColor={statusColor} warning={warning} />
+                                    <DataAyamCard key={label} title={title} label={label} value={value} icon={icon} statusColor={statusColor} warning={warning} />
                                 ))}
                             </div>
                         </div>
@@ -692,7 +706,11 @@ export default function DataAyam() {
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     GRAFIK MORTALITAS
                                 </p>
-                                <GrafikMortalitas></GrafikMortalitas>
+                                {grafikData.map((grafik) => (
+                                    <div key={grafik.chartId}>
+                                        <GrafikCard {...grafik} />
+                                    </div>
+                                ))}
                             </div>
                             <div className='w-full h-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>

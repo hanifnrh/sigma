@@ -8,8 +8,21 @@ import { IoWater } from "react-icons/io5";
 import { TbAtom2Filled } from "react-icons/tb";
 
 type Status = { text: string; color: string };
+interface HistoryRecord {
+    timestamp: Date;
+    jumlah_ayam: number;
+    mortalitas: number;
+    usia_ayam: number;
+}
 
+interface ParameterData {
+    timestamp: string;
+    ammonia: number;
+    temperature: number;
+    humidity: number;
+}
 interface DataAyamContextType {
+    // CURRENT DATA
     jumlahAyam: number;
     setJumlahAyam: (jumlahAyam: number) => void;
     mortalitas: number;
@@ -28,9 +41,15 @@ interface DataAyamContextType {
     ayamDecreasePercentage: number;
     daysToTarget: number | null;
     statusAyam: { mortalitas: Status; daysToTarget: Status; ayamDecreasePercentage: Status };
+    ayamId: number;
+    // HISTORY
+    historyData: HistoryRecord[];
+    setHistoryData: (historyData: HistoryRecord[]) => void;
 }
 
 type StatsContextType = {
+    timestamp: Date | null;
+    setTimestamp: (timestamp: Date) => void;
     ammonia: number | null;
     temperature: number | null;
     humidity: number | null;
@@ -44,6 +63,10 @@ type StatsContextType = {
     averageScore: number | null;
     setAverageScore: (averageScore: number) => void;
     statusAndColor: { status: string; color: string } | null;
+
+    // HISTORY
+    historyParameter: ParameterData[];
+    setHistoryParameter: (historyParameter: ParameterData[]) => void;
 };
 
 type Notification = {
@@ -86,14 +109,18 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null);
     const [targetTanggal, setTargetTanggal] = useState<Date | null>(null);
     const [farmingStarted, setFarmingStarted] = useState<boolean>(false);
+    const [ayamId, setAyamId] = useState<number>(0);
+    // Chicken data history states
+    const [historyData, setHistoryData] = useState<HistoryRecord[]>([]);
 
     // Stats data states
+    const [timestamp, setTimestamp] = useState<Date | null>(null);
     const [ammonia, setAmmonia] = useState<number | null>(null);
     const [temperature, setTemperature] = useState<number | null>(null);
     const [humidity, setHumidity] = useState<number | null>(null);
     const [averageScore, setAverageScore] = useState<number | null>(null);
     const [overallStatus, setOverallStatus] = useState<Status>({ text: "Normal", color: "text-green-500" });
-
+    const [historyParameter, setHistoryParameter] = useState<ParameterData[]>([]);
     const sendNotification = (notification: Notification) => {
         addNotification(notification);
     };
@@ -107,8 +134,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 if (data && Array.isArray(data)) {
                     const latestData = data
                         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                    const { ammonia, temperature, humidity } = latestData;
-
+                    const { timestamp, ammonia, temperature, humidity } = latestData;
+                    setTimestamp(timestamp);
                     setAmmonia(ammonia);
                     setTemperature(temperature);
                     setHumidity(humidity);
@@ -123,6 +150,64 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
         return () => clearInterval(interval); // Cleanup
     }, []);
+
+    useEffect(() => {
+        const fetchParameterHistory = async () => {
+            try {
+                const response = await fetch("/api/parameters");
+                const data: ParameterData[] = await response.json(); // Ensure the data is of type ParameterData[]
+
+                if (data && Array.isArray(data)) {
+                    // Simpan semua data parameter ke dalam riwayat
+                    setHistoryParameter(data);
+                }
+            } catch (error) {
+                console.error("Error fetching parameter history:", error);
+            }
+        };
+
+        fetchParameterHistory();
+    }, []);
+
+
+    const fetchAyamHistory = async () => {
+        try {
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+            if (allData.length > 0) {
+                const record = allData[0];
+                const ayamId = record.id;
+                setAyamId(ayamId);
+                const historyResponse = await fetch(`http://localhost:8000/api/data-ayam/${ayamId}/history/`);
+                if (!historyResponse.ok) {
+                    throw new Error(`Failed to fetch history for ayam ID: ${ayamId}`);
+                }
+
+                const history = await historyResponse.json();
+                if (Array.isArray(history)) {
+                    setHistoryData(history); // Set history data untuk grafik
+                } else {
+                    setHistoryData([]);
+                    console.log('No history data found.');
+                }
+            } else {
+                setHistoryData([]);
+                console.log('No ayam data found.');
+            }
+        } catch (error) {
+            console.error('Error fetching ayam history:', error);
+            setHistoryData([]);
+        }
+    };
+
+    useEffect(() => {
+        fetchAyamHistory();
+    }, []);
+
 
     const getStatusAndColor = (score: number): { status: string; color: string } => {
         if (score >= 90) {
@@ -233,11 +318,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         const ammoniaScore = ammonia ? calculateScore(ammonia, 'ammonia').score : 0;
         const temperatureScore = temperature ? calculateScore(temperature, 'temperature').score : 0;
         const humidityScore = humidity ? calculateScore(humidity, 'humidity').score : 0;
-    
+
         const averageScore = (ammoniaScore + temperatureScore + humidityScore) / 3;
         return Math.round(averageScore); // Round the result
     };
-    
+
 
     const updateAverageScore = async (averageScore: number) => {
         const data = {
@@ -314,7 +399,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
             // Call the update function with the new score
             updateAverageScore(score);
         }
-    }, [ammonia, temperature, humidity]); // Dependencies    
+    }, [ammonia, temperature, humidity]); // Dependencies
 
     const [status, setStatus] = useState({
         ammonia: { text: "Sangat Baik", color: "text-green-500" },
@@ -636,8 +721,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 ayamDecreasePercentage,
                 daysToTarget,
                 statusAyam,
+                ayamId,
+
+                // Chicken history
+                historyData,
+                setHistoryData,
 
                 // Stats data
+                timestamp,
+                setTimestamp,
                 ammonia,
                 temperature,
                 humidity,
@@ -651,6 +743,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 averageScore,
                 setAverageScore,
                 statusAndColor,
+                historyParameter,
+                setHistoryParameter,
             }}
         >
             {children}
