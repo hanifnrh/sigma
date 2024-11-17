@@ -20,6 +20,8 @@ interface ParameterData {
     ammonia: number;
     temperature: number;
     humidity: number;
+    score: number;
+    status: string;
 }
 interface DataAyamContextType {
     // CURRENT DATA
@@ -42,6 +44,20 @@ interface DataAyamContextType {
     daysToTarget: number | null;
     statusAyam: { mortalitas: Status; daysToTarget: Status; ayamDecreasePercentage: Status };
     ayamId: number;
+
+    // FUNCTIONS
+    harvested: boolean;
+    showConfirmHarvestDialog: boolean;
+    setHarvested: (value: boolean) => void;
+    setShowConfirmHarvestDialog: (value: boolean) => void;
+    handleHarvest: () => void;
+    confirmHarvest: () => Promise<void>;
+    updateAgeInDays: (ageInDays: number) => Promise<void>;
+    postJumlahAyam: (jumlahAyam: number, targetTanggal: Date, startDate: Date) => Promise<void>;
+    updateJumlahAyam: (jumlahAyamAwal: number, jumlahAyamBaru: number) => Promise<void>;
+    updateMortalitas: (JumlahAwalAyam: number, ayamMati: number) => Promise<void>;
+    handleStartFarming: (initialCount: number, targetDate: Date | null) => Promise<void>;
+
     // HISTORY
     historyData: HistoryRecord[];
     setHistoryData: (historyData: HistoryRecord[]) => void;
@@ -110,17 +126,29 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const [targetTanggal, setTargetTanggal] = useState<Date | null>(null);
     const [farmingStarted, setFarmingStarted] = useState<boolean>(false);
     const [ayamId, setAyamId] = useState<number>(0);
+
     // Chicken data history states
     const [historyData, setHistoryData] = useState<HistoryRecord[]>([]);
 
-    // Stats data states
+    // Parameter data states
     const [timestamp, setTimestamp] = useState<Date | null>(null);
     const [ammonia, setAmmonia] = useState<number | null>(null);
     const [temperature, setTemperature] = useState<number | null>(null);
     const [humidity, setHumidity] = useState<number | null>(null);
     const [averageScore, setAverageScore] = useState<number | null>(null);
-    const [overallStatus, setOverallStatus] = useState<Status>({ text: "Normal", color: "text-green-500" });
+    const [overallStatus, setOverallStatus] = useState<Status>({ text: "Error", color: "text-red-500" });
     const [historyParameter, setHistoryParameter] = useState<ParameterData[]>([]);
+
+    // Functions
+    const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
+    const [countdown, setCountdown] = useState<string>('');
+    const [harvested, setHarvested] = useState(false);
+    const [showConfirmHarvestDialog, setShowConfirmHarvestDialog] = useState(false);
+    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+    const [lastPostedDate, setLastPostedDate] = useState<string>("");
+    const { notifications } = useNotifications();
     const sendNotification = (notification: Notification) => {
         addNotification(notification);
     };
@@ -208,6 +236,77 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         fetchAyamHistory();
     }, []);
 
+    const updateStatus = async (overallStatus: string) => {
+        const data = {
+            status: overallStatus, // Only the field you want to update
+        };
+
+        try {
+            // Fetch existing data
+            const response = await fetch('http://localhost:8000/api/parameters/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch chicken data');
+            }
+
+            const allData = await response.json();
+
+            if (allData.length > 0) {
+                // Assume first record for update
+                const record = allData[0];
+
+                // Patch existing record
+                const updateResponse = await fetch(`http://localhost:8000/api/parameters/${record.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!updateResponse.ok) {
+                    const errorResult = await updateResponse.json();
+                    console.error('Error updating record:', errorResult);
+                    throw new Error('Failed to update chicken data');
+                }
+
+                const updatedRecord = await updateResponse.json();
+                console.log('Chicken data updated:', updatedRecord);
+            } else {
+                // Create new record
+                const createResponse = await fetch('http://localhost:8000/api/parameters/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ammonia,
+                        temperature,
+                        humidity,
+                        status: overallStatus,
+                    }),
+                });
+
+                if (!createResponse.ok) {
+                    const errorResult = await createResponse.json();
+                    console.error('Error creating record:', errorResult);
+                    throw new Error('Failed to create chicken data');
+                }
+
+                const createdRecord = await createResponse.json();
+                console.log('New chicken data created:', createdRecord);
+            }
+
+        } catch (error) {
+            console.error('Error in updateAverageScore:', error);
+            alert('An error occurred while updating the chicken data.');
+        }
+    };
+
+    useEffect(() => {
+        if (overallStatus.text) {
+            updateStatus(overallStatus.text);
+        }
+    }, [overallStatus.text]);
 
     const getStatusAndColor = (score: number): { status: string; color: string } => {
         if (score >= 90) {
@@ -613,6 +712,377 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         fetchDataChicken();
     }, []);
 
+    const updateAgeInDays = async (ageInDays: number) => {
+        const data = {
+            usia_ayam: ageInDays,  // Send the updated age
+        };
+
+        try {
+            // Fetch the existing record
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+
+            // If there's existing data, update it using the first (or only) record
+            if (allData.length > 0) {
+                const record = allData[0];  // Assuming there's only one record, we take the first one
+
+                // Send the PATCH request to update the age in the record
+                const updateResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await updateResponse.json();
+                if (!updateResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to update chicken age');
+                }
+
+                console.log('Age updated successfully:', result);
+            } else {
+                console.error('No ayam data found to update.');
+            }
+        } catch (error) {
+            console.error('Error updating age:', error);
+            alert('Terjadi kesalahan saat memperbarui usia ayam.');
+        }
+    };
+
+    const postJumlahAyam = async (jumlahAyam: number, targetTanggal: Date, startDate: Date) => {
+        const data = {
+            jumlah_ayam_awal: jumlahAyam, // Anggap jumlah ayam awal sama dengan jumlah ayam yang dikirim
+            tanggal_mulai: startDate.toISOString().split('T')[0],
+            tanggal_panen: targetTanggal.toISOString().split('T')[0], // Hanya ambil bagian tanggal saja
+            jumlah_ayam: jumlahAyam, // Jumlah ayam saat ini
+            mortalitas: 0, // Nilai default, misalnya 0 untuk awal
+            usia_ayam: 0 // Usia awal ayam, diisi 0 misalnya
+        };
+
+        try {
+            const response = await fetch('http://localhost:8000/api/data-ayam/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+                console.error('Server response error:', result); // Tampilkan respons server
+                throw new Error('Failed to start farming');
+            }
+
+            console.log('Farming started:', result);
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memulai ternak.');
+        }
+    };
+
+    const updateJumlahAyam = async (jumlahAyamAwal: number, jumlahAyamBaru: number) => {
+        const data = {
+            jumlah_ayam: jumlahAyamBaru // Only the field you want to update
+        };
+
+        try {
+            // Fetch all data
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+
+            // If there's existing data, update it using the first (or only) item
+            if (allData.length > 0) {
+                const record = allData[0];  // Assuming there's only one record, we take the first one
+
+                // If record exists, we can patch the data
+                const updateResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await updateResponse.json();
+                if (!updateResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to update chicken count');
+                }
+
+                console.log('Chicken count updated:', result);
+                setJumlahAyam(jumlahAyamBaru);
+            } else {
+                // If no existing data, create new data
+                const createResponse = await fetch('http://localhost:8000/api/data-ayam/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        jumlah_ayam_awal: jumlahAyamAwal,  // Set initial count
+                        jumlah_ayam: jumlahAyamBaru,       // Set new chicken count
+                        tanggal_panen: new Date(),         // Set current harvest date
+                        mortalitas: 0,                     // Set initial mortalitas (0)
+                        usia_ayam: 0                       // Set initial age (0)
+                    }),
+                });
+
+                const result = await createResponse.json();
+                if (!createResponse.ok) {
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to create new ayam data');
+                }
+
+                console.log('New chicken data created:', result);
+                setJumlahAyam(jumlahAyamBaru);
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memperbarui jumlah ayam.');
+        }
+    };
+
+    useEffect(() => {
+        // Calculate mortality whenever jumlahAyam changes
+        if (jumlahAyam !== jumlahAwalAyam) {
+            const mortalityPercentage = (((jumlahAwalAyam - jumlahAyam) / jumlahAwalAyam) * 100).toFixed(1);
+            setMortalitas(Number(mortalityPercentage));
+
+            // Update the backend
+            updateMortalitas(jumlahAwalAyam, jumlahAyam);
+        }
+    }, [jumlahAyam, jumlahAwalAyam]); // This effect runs when jumlahAyam or jumlahAwalAyam changes
+
+
+    const updateMortalitas = async (JumlahAwalAyam: number, ayamMati: number) => {
+        // Pastikan perhitungan mortalitas tidak menghasilkan nilai yang tidak valid
+        const mortalityPercentage = (JumlahAwalAyam > 0 && jumlahAyam > 0)
+            ? (((JumlahAwalAyam - jumlahAyam) / JumlahAwalAyam) * 100).toFixed(1)
+            : '0'; // Set ke 0 jika perhitungan tidak valid
+
+        const data = {
+            mortalitas: parseFloat(mortalityPercentage), // Pastikan nilai mortalitas adalah angka
+        };
+
+        try {
+            // Ambil data ayam yang ada
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+            if (allData.length === 0) {
+                console.log('Data ayam tidak ada, kemungkinan panen sudah selesai atau data sudah dihapus.');
+                // Buat data baru jika tidak ada data yang ditemukan
+                const createResponse = await fetch('http://localhost:8000/api/data-ayam/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mortalitas: parseFloat(mortalityPercentage) || 0,  // Pastikan mortalitas adalah angka
+                        jumlah_ayam: jumlahAyam,                 // Jumlah ayam saat ini
+                        jumlah_ayam_awal: JumlahAwalAyam,        // Jumlah ayam awal
+                        tanggal_panen: new Date(),               // Tanggal panen sekarang
+                        usia_ayam: 0                             // Usia ayam (0 untuk awal)
+                    }),
+                });
+
+                if (!createResponse.ok) {
+                    const errorData = await createResponse.json();
+                    console.error('Server response error:', errorData);
+                    throw new Error('Failed to create new ayam data');
+                }
+
+                const result = await createResponse.json();
+                console.log('New mortalitas data created:', result);
+                setMortalitas(parseFloat(mortalityPercentage));
+                return;  // Keluar dari fungsi setelah membuat data baru
+            }
+
+            // Jika data ada, pastikan kita hanya memperbarui jika mortalitas berubah
+            const record = allData[0];  // Mengambil data pertama
+
+            // Cek apakah mortalitas perlu diupdate
+            if (record.mortalitas !== data.mortalitas) {
+                // Jika mortalitas berbeda, lakukan pembaruan
+                const updateResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!updateResponse.ok) {
+                    const errorData = await updateResponse.json();
+                    console.error('Server response error:', errorData);
+                    throw new Error('Failed to update mortalitas');
+                }
+
+                const result = await updateResponse.json();
+                console.log('Mortalitas updated:', result);
+                setMortalitas(parseFloat(mortalityPercentage));
+            } else {
+                console.log('Mortalitas tidak berubah, tidak perlu update');
+            }
+
+        } catch (error) {
+            // console.error('Error:', error);
+            // alert('Terjadi kesalahan saat memperbarui mortalitas.');
+        }
+    };
+
+    async function handleDeleteData() {
+        try {
+            // Ambil semua data ayam
+            const response = await fetch('http://localhost:8000/api/data-ayam/');
+            if (!response.ok) {
+                throw new Error('Failed to fetch ayam data');
+            }
+
+            const allData = await response.json();
+            if (allData.length > 0) {
+                // Mengambil ID ayam pertama yang ditemukan (atau bisa memilih berdasarkan kriteria lainnya)
+                const record = allData[0];  // Misalnya Anda ingin menghapus record pertama
+
+                // Kirim permintaan DELETE berdasarkan ID
+                const deleteResponse = await fetch(`http://localhost:8000/api/data-ayam/${record.id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (deleteResponse.ok) {
+                    console.log('Data ayam berhasil dihapus');
+
+                    // Setelah penghapusan, set mortalitas ke 0
+                    await updateMortalitas(0, 0); // Reset mortalitas karena ayam sudah dihapus
+                } else {
+                    const result = await deleteResponse.json();
+                    console.error('Server response error:', result);
+                    throw new Error('Failed to delete chicken data');
+                }
+            } else {
+                console.log('Tidak ada data ayam untuk dihapus');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menghapus data ayam.');
+        }
+    }
+
+    useEffect(() => {
+        if (farmingStarted && tanggalMulai && targetTanggal) {
+            const calculateAge = () => {
+                const startDate = new Date(tanggalMulai);
+                const harvestDate = new Date(targetTanggal);
+                const now = new Date();
+
+                // Calculate the age in days
+                const ageInDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                const daysUntilHarvest = Math.floor((harvestDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                setAgeInDays(ageInDays);
+                setCountdown(`Tersisa ${daysUntilHarvest} hari untuk panen`);
+
+                // Cek jika usia ayam sudah berubah dan belum diposting hari ini
+                const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                if (today !== lastPostedDate) {
+                    setLastPostedDate(today);
+                    updateAgeInDays(ageInDays); // Lakukan post jika tanggal berbeda
+                }
+            };
+
+            // Initial calculation of age
+            calculateAge();
+
+            // Update age every day
+            const ageInterval = setInterval(calculateAge, 1000 * 60 * 60 * 24); // Update every day
+
+            return () => clearInterval(ageInterval); // Cleanup when component unmounts
+        }
+    }, [farmingStarted, tanggalMulai, targetTanggal]);
+
+    async function handleStartFarming(initialCount: number, targetDate: Date | null) {
+        if (!targetDate) {
+            alert("Please select a harvest date.");
+            return;
+        }
+    
+        const now = new Date();
+        const target = new Date(targetDate);
+    
+        // Cek jika tanggal yang dipilih kurang dari hari ini
+        if (target <= now) {
+            alert("Tanggal panen harus lebih dari hari ini.");
+            return;
+        }
+    
+        // Set nilai awal ayam dan tanggal target
+        setJumlahAwalAyam(initialCount);
+        setJumlahAyam(initialCount);
+        setTargetTanggal(target);
+        setTanggalMulai(now);
+        setCountdown(`Tersisa ${Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))} hari untuk panen`);
+        setFarmingStarted(true);
+        setDialogOpen(false);
+    
+        // Panggil fungsi untuk menyimpan data ke API
+        await postJumlahAyam(initialCount, target, now);
+    
+        // Set timer countdown untuk menghitung sisa hari hingga panen
+        const countdownInterval = setInterval(() => {
+            const now = new Date();
+            const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+            if (diff < 0) {
+                clearInterval(countdownInterval);
+                setCountdown('Waktu panen telah tiba!');
+            } else {
+                setCountdown(`Tersisa ${diff} hari untuk panen`);
+            }
+        }, 1000 * 60 * 60 * 24); // Update setiap hari
+    
+        // Remove the return cleanup function as it is not needed
+    }    
+
+    function handleHarvest() {
+        if (targetTanggal) {
+            const today = new Date();
+            if (today >= targetTanggal) {
+                setHarvested(true);
+            } else {
+                setShowConfirmHarvestDialog(true);
+            }
+        }
+    }
+
+    const confirmHarvest = async () => {
+        setHarvested(true);
+        setShowConfirmHarvestDialog(false); // Close dialog after confirming
+        setFarmingStarted(false); // Reset farming state after harvest
+        setHarvestDialogOpen(false);
+        await handleDeleteData();
+        window.location.reload();
+    };
+
+
+
     const ayamDecreasePercentage =
         jumlahAwalAyam > 0 ? ((jumlahAwalAyam - jumlahAyam) / jumlahAwalAyam) * 100 : 0;
 
@@ -722,6 +1192,19 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 daysToTarget,
                 statusAyam,
                 ayamId,
+
+                // FUNCTIONS
+                harvested,
+                showConfirmHarvestDialog,
+                setHarvested,
+                setShowConfirmHarvestDialog,
+                handleHarvest,
+                confirmHarvest,
+                updateAgeInDays,
+                postJumlahAyam,
+                updateJumlahAyam,
+                updateMortalitas,
+                handleStartFarming,
 
                 // Chicken history
                 historyData,

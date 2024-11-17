@@ -11,10 +11,15 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "./button";
 
+// Helper function to round timestamp to the nearest 5 minutes
+const roundToNearest5Minutes = (timestamp: Date) => {
+    const minutes = Math.floor(timestamp.getMinutes() / 5) * 5;
+    timestamp.setMinutes(minutes, 0, 0);
+    return timestamp;
+};
+
 export function RiwayatTable() {
     const {
-        overallStatus,
-        averageScore,
         historyData,
         historyParameter,
     } = useDataContext();
@@ -24,71 +29,95 @@ export function RiwayatTable() {
 
     useEffect(() => {
         const mergeData = () => {
-            const merged: any[] = [];
-            let i = 0;
-            let j = 0;
-
-            while (i < historyParameter.length && j < historyData.length) {
-                const param = historyParameter[i];
-                const ayam = historyData[j];
-
-                // Compare timestamps, merge data if they match
-                if (new Date(param.timestamp).getTime() === new Date(ayam.timestamp).getTime()) {
-                    merged.push({
-                        ...param,
-                        ...ayam,
+            const dataMap = new Map<string, any>(); // Gunakan Map untuk menghindari duplikasi berdasarkan timestamp
+            let lastData: any = {}; // Initialize with empty object for storing the last valid data
+    
+            // Helper untuk membulatkan ke 5 menit terdekat
+            const roundToNearest5Minutes = (date: Date) => {
+                const ms = 1000 * 60 * 5; // 5 menit dalam milidetik
+                return new Date(Math.round(date.getTime() / ms) * ms);
+            };
+    
+            // Proses data parameter
+            historyParameter.forEach((param) => {
+                const roundedTimestamp = roundToNearest5Minutes(new Date(param.timestamp));
+                const key = roundedTimestamp.toISOString();
+    
+                // Jika tidak ada data sebelumnya, gunakan data default atau sebelumnya
+                if (!dataMap.has(key)) {
+                    dataMap.set(key, {
+                        timestamp: roundedTimestamp,
+                        temperature: param.temperature,
+                        humidity: param.humidity,
+                        ammonia: param.ammonia,
+                        score: param.score,
+                        status: param.status,
+                        jumlah_ayam: lastData.jumlah_ayam || null,
+                        mortalitas: lastData.mortalitas || null,
+                        usia_ayam: lastData.usia_ayam || null,
                     });
-                    i++;
-                    j++;
-                } else if (new Date(param.timestamp).getTime() < new Date(ayam.timestamp).getTime()) {
-                    merged.push({
-                        ...param,
-                        jumlah_ayam: null,
-                        mortalitas: null,
-                        usia_ayam: null,
-                    });
-                    i++;
                 } else {
-                    merged.push({
-                        ...ayam,
+                    // Update data jika sudah ada
+                    const existingData = dataMap.get(key);
+                    dataMap.set(key, {
+                        ...existingData,
+                        temperature: param.temperature,
+                        humidity: param.humidity,
+                        ammonia: param.ammonia,
+                        score: param.score,
+                        status: param.status,
+                    });
+                }
+    
+                // Simpan data terakhir
+                lastData = { ...dataMap.get(key) };
+            });
+    
+            // Proses data ayam
+            historyData.forEach((ayam) => {
+                const roundedTimestamp = roundToNearest5Minutes(new Date(ayam.timestamp));
+                const key = roundedTimestamp.toISOString();
+    
+                if (!dataMap.has(key)) {
+                    // Tambahkan data ayam baru
+                    dataMap.set(key, {
+                        timestamp: roundedTimestamp,
                         temperature: null,
                         humidity: null,
                         ammonia: null,
-                        averageScore: null,
+                        score: null,
+                        status: null,
+                        jumlah_ayam: ayam.jumlah_ayam,
+                        mortalitas: ayam.mortalitas,
+                        usia_ayam: ayam.usia_ayam,
                     });
-                    j++;
+                } else {
+                    // Update data ayam jika sudah ada
+                    const existingData = dataMap.get(key);
+                    dataMap.set(key, {
+                        ...existingData,
+                        jumlah_ayam: ayam.jumlah_ayam, // Overwrite dengan nilai terbaru
+                        mortalitas: ayam.mortalitas,
+                        usia_ayam: ayam.usia_ayam,
+                    });
                 }
-            }
-
-            // Add remaining items from historyParameter
-            while (i < historyParameter.length) {
-                merged.push({
-                    ...historyParameter[i],
-                    jumlah_ayam: null,
-                    mortalitas: null,
-                    usia_ayam: null,
-                });
-                i++;
-            }
-
-            // Add remaining items from historyData
-            while (j < historyData.length) {
-                merged.push({
-                    ...historyData[j],
-                    temperature: null,
-                    humidity: null,
-                    ammonia: null,
-                    averageScore: null,
-                });
-                j++;
-            }
-
-            setCombinedHistory(merged);
+    
+                // Simpan data terakhir
+                lastData = { ...dataMap.get(key) };
+            });
+    
+            // Pastikan data yang tidak ada pembaruan tetap muncul dengan data terakhir
+            const mergedArray = Array.from(dataMap.values()).sort(
+                (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+            );
+    
+            // Update state dengan data yang sudah digabungkan
+            setCombinedHistory(mergedArray);
         };
-
+    
         mergeData();
-    }, [historyParameter, historyData]); // Re-run when either history changes
-
+    }, [historyParameter, historyData]);
+    
     const getButtonVariant = (status: string) => {
         switch (status) {
             case "Sangat Baik":
@@ -131,10 +160,10 @@ export function RiwayatTable() {
                                 <TableCell className="font-medium">{item.jumlah_ayam}</TableCell>
                                 <TableCell className="font-medium">{item.mortalitas}</TableCell>
                                 <TableCell className="font-medium">{item.usia_ayam}</TableCell>
-                                <TableCell className="font-medium">{averageScore}</TableCell>
+                                <TableCell className="font-medium">{item.score}</TableCell>
                                 <TableCell>
-                                    <Button variant={getButtonVariant(overallStatus.text)}>
-                                        {overallStatus.text}
+                                    <Button variant={getButtonVariant(item.status)}>
+                                        {item.status}
                                     </Button>
                                 </TableCell>
                             </TableRow>
