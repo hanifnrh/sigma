@@ -68,6 +68,8 @@ interface DataAyamContextType {
     jumlahAyamInput: number;
     setJumlahAyamInput: (value: number) => void;
     handleParameterPanen: () => Promise<void>;
+    countdown: string;
+    setCountdown: (color: string) => void;
     // HISTORY
     historyData: HistoryRecord[];
     setHistoryData: (historyData: HistoryRecord[]) => void;
@@ -1014,6 +1016,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 jumlahAyamInput,
                 setJumlahAyamInput,
                 handleParameterPanen,
+                countdown,
+                setCountdown,
 
                 // Chicken history
                 historyData,
