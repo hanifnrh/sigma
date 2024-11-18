@@ -1,4 +1,5 @@
 "use client";
+import { useDataContext } from "@/components/DataContext";
 import { useNotifications } from "@/components/NotificationContext";
 import { Aktivitas } from '@/components/ui/Aktivitas';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import GrafikKeseluruhan from '@/components/ui/GrafikKeseluruhan';
+import GrafikCard from "@/components/ui/GrafikCard";
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { RiwayatTable } from '@/components/ui/RiwayatTable';
 import dynamic from 'next/dynamic';
@@ -23,12 +24,24 @@ import Navbar from "../navbar";
 const AreaChart = dynamic(() => import('@/components/ui/AreaChart'), { ssr: false });
 
 export default function Riwayat() {
+    const { overallColor, overallStatus, averageScore } = useDataContext();
     const { notifications } = useNotifications();
+    const grafikData = [
+        {
+            title: "Skor Keseluruhan",
+            value: averageScore ?? 0, // Contoh rata-rata
+            statusColor: overallColor || "text-gray-500",
+            statusText: overallStatus || "N/A",
+            chartId: "overall",
+            apiUrl: "http://127.0.0.1:8000/api/parameters/",
+            dataType: "score",
+        }
+    ];
     return (
         <main className="w-full bg-white dark:bg-zinc-900 relative">
             <Navbar />
             <div className='flex flex-col mt-10 sm:mt-0 sm:pl-44 md:pl-56 xl:pl-64 w-full'>
-            <div className="sticky top-10 sm:top-0 z-10">
+                <div className="sticky top-10 sm:top-0 z-10">
                     <div className="flex header w-full py-2 px-4 body-light justify-between items-center border-b bg-white">
                         <div className='flex items-center navbar-title body-bold text-sm sm:text-xs body-light'>
                             <GrMapLocation className='text-xl' />
@@ -108,7 +121,11 @@ export default function Riwayat() {
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>
                                     GRAFIK KESELURUHAN
                                 </p>
-                                <GrafikKeseluruhan />
+                                {grafikData.map((grafik) => (
+                                    <div key={grafik.chartId}>
+                                        <GrafikCard {...grafik} />
+                                    </div>
+                                ))}
                             </div>
                             <div className='w-full'>
                                 <p className='navbar-title body-bold text-sm sm:text-xs mb-2'>

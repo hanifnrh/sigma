@@ -67,6 +67,7 @@ interface DataAyamContextType {
     handleStartFarming: (initialCount: number, targetDate: Date | null) => Promise<void>;
     jumlahAyamInput: number;
     setJumlahAyamInput: (value: number) => void;
+    handleParameterPanen: () => Promise<void>;
     // HISTORY
     historyData: HistoryRecord[];
     setHistoryData: (historyData: HistoryRecord[]) => void;
@@ -180,7 +181,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const [overallColor, setOverallColor] = useState<string>("");
 
 
-    // Functionshandle
+    // Functions handle
     const [countdown, setCountdown] = useState<string>('');
     const [harvested, setHarvested] = useState(false);
     const [showConfirmHarvestDialog, setShowConfirmHarvestDialog] = useState(false);
@@ -192,6 +193,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         addNotification(notification);
     };
     const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -274,6 +277,30 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     useEffect(() => {
         fetchAyamHistory();
     }, []);
+
+    const handleParameterPanen = async () => {
+        setLoading(true);
+        setError(null); // Reset error before making the request
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/parameters/', {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete parameters');
+            }
+
+            const data = await response.json();
+            alert('All parameters have been deleted!');
+            console.log(data); // Response dari server
+        } catch (err) {
+            setError('Failed to delete parameters');
+            console.error('Error deleting parameters:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const getStatusAndColor = (score: number): { status: string; color: string } => {
         if (score >= 90) {
@@ -856,6 +883,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setFarmingStarted(false); // Reset farming state after harvest
         setHarvestDialogOpen(false);
         await handleDeleteData();
+        await handleParameterPanen();
         window.location.reload();
     };
 
@@ -985,6 +1013,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 handleStartFarming,
                 jumlahAyamInput,
                 setJumlahAyamInput,
+                handleParameterPanen,
 
                 // Chicken history
                 historyData,
