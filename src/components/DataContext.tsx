@@ -22,7 +22,15 @@ interface ParameterData {
     humidity: number;
     score: number;
     status: string;
+    ammonia_status: string;
+    temperature_status: string;
+    humidity_status: string;
+    ammonia_color: string;
+    temperature_color: string;
+    humidity_color: string;
+    color: string;
 }
+
 interface DataAyamContextType {
     // CURRENT DATA
     jumlahAyam: number;
@@ -57,7 +65,8 @@ interface DataAyamContextType {
     updateJumlahAyam: (jumlahAyamAwal: number, jumlahAyamBaru: number) => Promise<void>;
     updateMortalitas: (JumlahAwalAyam: number, ayamMati: number) => Promise<void>;
     handleStartFarming: (initialCount: number, targetDate: Date | null) => Promise<void>;
-
+    jumlahAyamInput: number;
+    setJumlahAyamInput: (value: number) => void;
     // HISTORY
     historyData: HistoryRecord[];
     setHistoryData: (historyData: HistoryRecord[]) => void;
@@ -65,25 +74,49 @@ interface DataAyamContextType {
 
 type StatsContextType = {
     timestamp: Date | null;
-    setTimestamp: (timestamp: Date) => void;
+    setTimestamp: (timestamp: Date | null) => void;
     ammonia: number | null;
+    setAmmonia: (value: number | null) => void;
     temperature: number | null;
+    setTemperature: (value: number | null) => void;
     humidity: number | null;
-    setAmmonia: (value: number) => void;
-    setTemperature: (value: number) => void;
-    setHumidity: (value: number) => void;
-    overallStatus: { text: string; color: string };
-    setOverallStatus: (status: { text: string; color: string }) => void;
-    status: { ammonia: Status; temperature: Status; humidity: Status };
-    warnings: { ammonia: string; temperature: string; humidity: string };
+    setHumidity: (value: number | null) => void;
     averageScore: number | null;
-    setAverageScore: (averageScore: number) => void;
+    setAverageScore: (averageScore: number | null) => void;
+
+    // New states for colors
+    ammoniaColor: string;
+    setAmmoniaColor: (color: string) => void;
+    temperatureColor: string;
+    setTemperatureColor: (color: string) => void;
+    humidityColor: string;
+    setHumidityColor: (color: string) => void;
+    overallColor: string;
+    setOverallColor: (color: string) => void;
+
+    ammoniaStatus: string;
+    setAmmoniaStatus: (status: string) => void;  // Now expecting a string
+    temperatureStatus: string;
+    setTemperatureStatus: (status: string) => void;  // Now expecting a string
+    humidityStatus: string;
+    setHumidityStatus: (status: string) => void;  // Now expecting a string
+
+    overallStatus: string;
+    setOverallStatus: (status: string) => void;  // Now expecting a string
+
+    // overallStatus: { text: string; color: string };
+    // setOverallStatus: (status: { text: string; color: string }) => void;
+
+    // Warnings for each parameter
+    warnings: { ammonia: string; temperature: string; humidity: string };
+
     statusAndColor: { status: string; color: string } | null;
 
-    // HISTORY
+    // History
     historyParameter: ParameterData[];
     setHistoryParameter: (historyParameter: ParameterData[]) => void;
 };
+
 
 type Notification = {
     data: string;
@@ -108,12 +141,6 @@ interface DataProviderProps {
     children: ReactNode;
 }
 
-const THRESHOLDS = {
-    ammonia: { optimal: 20, good: 25, bad: 30 },
-    temperature: { veryGood: [26, 32], good: [[20, 25], [33, 34]], bad: [[18, 19], [35, 36]] },
-    humidity: { veryGood: [62, 68], good: [[60, 61], [69, 70]], bad: [[58, 59], [71, 72]] },
-};
-
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const { addNotification } = useNotifications();
 
@@ -136,15 +163,27 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const [temperature, setTemperature] = useState<number | null>(null);
     const [humidity, setHumidity] = useState<number | null>(null);
     const [averageScore, setAverageScore] = useState<number | null>(null);
-    const [overallStatus, setOverallStatus] = useState<Status>({ text: "Error", color: "text-red-500" });
+    const [overallStatus, setOverallStatus] = useState<string>("");
+    // const [overallStatus, setOverallStatus] = useState<Status>({ text: "Error", color: "text-red-500" });
+    const [latestData, setLatestData] = useState<ParameterData | null>(null);
     const [historyParameter, setHistoryParameter] = useState<ParameterData[]>([]);
 
-    // Functions
-    const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
+    // const [historyParameter, setHistoryParameter] = useState<ParameterData[]>([]);
+    const [ammoniaStatus, setAmmoniaStatus] = useState<string>("");
+    const [temperatureStatus, setTemperatureStatus] = useState<string>("");
+    const [humidityStatus, setHumidityStatus] = useState<string>("");
+
+    const [ammoniaColor, setAmmoniaColor] = useState<string>("");
+    const [temperatureColor, setTemperatureColor] = useState<string>("");
+    const [humidityColor, setHumidityColor] = useState<string>("");
+
+    const [overallColor, setOverallColor] = useState<string>("");
+
+
+    // Functionshandle
     const [countdown, setCountdown] = useState<string>('');
     const [harvested, setHarvested] = useState(false);
     const [showConfirmHarvestDialog, setShowConfirmHarvestDialog] = useState(false);
-    const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
     const [lastPostedDate, setLastPostedDate] = useState<string>("");
@@ -152,51 +191,51 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const sendNotification = (notification: Notification) => {
         addNotification(notification);
     };
+    const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await fetch("/api/parameters");
-                const data = await response.json();
+                const data: ParameterData[] = await response.json();
 
-                if (data && Array.isArray(data)) {
-                    const latestData = data
-                        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                    const { timestamp, ammonia, temperature, humidity } = latestData;
-                    setTimestamp(timestamp);
-                    setAmmonia(ammonia);
-                    setTemperature(temperature);
-                    setHumidity(humidity);
+                if (Array.isArray(data) && data.length) {
+                    // Separate latest data and history
+                    const latestData = data.sort(
+                        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                    )[0];
+
+                    // Set history for all data
+                    setHistoryParameter(data);
+
+                    // Set only the latest data
+                    setLatestData(latestData); // Combine your state updates into one object if necessary
+                    setAmmonia(latestData.ammonia);
+                    setTemperature(latestData.temperature);
+                    setHumidity(latestData.humidity);
+                    setAverageScore(latestData.score);
+                    setOverallStatus(latestData.status);
+                    setAmmoniaStatus(latestData.ammonia_status);
+                    setTemperatureStatus(latestData.temperature_status);
+                    setHumidityStatus(latestData.humidity_status);
+                    setAmmoniaColor(latestData.ammonia_color);
+                    setTemperatureColor(latestData.temperature_color);
+                    setHumidityColor(latestData.humidity_color);
+                    setOverallColor(latestData.color);
                 }
             } catch (error) {
                 console.error("Error fetching parameter data:", error);
             }
         };
 
+        // Fetch immediately
         fetchData();
-        const interval = setInterval(fetchData, 300000); // Poll every 5 minutes
 
-        return () => clearInterval(interval); // Cleanup
-    }, []);
+        // Polling every 5 minutes
+        const interval = setInterval(fetchData, 300000);
 
-    useEffect(() => {
-        const fetchParameterHistory = async () => {
-            try {
-                const response = await fetch("/api/parameters");
-                const data: ParameterData[] = await response.json(); // Ensure the data is of type ParameterData[]
-
-                if (data && Array.isArray(data)) {
-                    // Simpan semua data parameter ke dalam riwayat
-                    setHistoryParameter(data);
-                }
-            } catch (error) {
-                console.error("Error fetching parameter history:", error);
-            }
-        };
-
-        fetchParameterHistory();
-    }, []);
-
+        return () => clearInterval(interval);
+    }, []); // Only fetch on mount
 
     const fetchAyamHistory = async () => {
         try {
@@ -236,78 +275,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         fetchAyamHistory();
     }, []);
 
-    const updateStatus = async (overallStatus: string) => {
-        const data = {
-            status: overallStatus, // Only the field you want to update
-        };
-
-        try {
-            // Fetch existing data
-            const response = await fetch('http://localhost:8000/api/parameters/');
-            if (!response.ok) {
-                throw new Error('Failed to fetch chicken data');
-            }
-
-            const allData = await response.json();
-
-            if (allData.length > 0) {
-                // Assume first record for update
-                const record = allData[0];
-
-                // Patch existing record
-                const updateResponse = await fetch(`http://localhost:8000/api/parameters/${record.id}/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                });
-
-                if (!updateResponse.ok) {
-                    const errorResult = await updateResponse.json();
-                    console.error('Error updating record:', errorResult);
-                    throw new Error('Failed to update chicken data');
-                }
-
-                const updatedRecord = await updateResponse.json();
-                console.log('Chicken data updated:', updatedRecord);
-            } else {
-                // Create new record
-                const createResponse = await fetch('http://localhost:8000/api/parameters/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ammonia,
-                        temperature,
-                        humidity,
-                        status: overallStatus,
-                    }),
-                });
-
-                if (!createResponse.ok) {
-                    const errorResult = await createResponse.json();
-                    console.error('Error creating record:', errorResult);
-                    throw new Error('Failed to create chicken data');
-                }
-
-                const createdRecord = await createResponse.json();
-                console.log('New chicken data created:', createdRecord);
-            }
-
-        } catch (error) {
-            console.error('Error in updateAverageScore:', error);
-            alert('An error occurred while updating the chicken data.');
-        }
-    };
-
-    useEffect(() => {
-        if (overallStatus.text) {
-            updateStatus(overallStatus.text);
-        }
-    }, [overallStatus.text]);
-
     const getStatusAndColor = (score: number): { status: string; color: string } => {
         if (score >= 90) {
             return { status: "Sangat Baik", color: "text-green-500" };
@@ -320,192 +287,102 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         }
     };
 
-    const calculateScore = (value: number | null, type: string): { score: number; status: string; color: string } => {
-        let score = 0;
-
-        if (value === null) {
-            return { score, ...getStatusAndColor(score) }; // Return default status if value is null
-        }
-
-        switch (type) {
-            case "ammonia":
-                if (value <= THRESHOLDS.ammonia.optimal) score = 100;
-                else if (value <= THRESHOLDS.ammonia.good)
-                    score =
-                        75 +
-                        (100 - 75) *
-                        (THRESHOLDS.ammonia.good - value) /
-                        (THRESHOLDS.ammonia.good - THRESHOLDS.ammonia.optimal);
-                else if (value <= THRESHOLDS.ammonia.bad)
-                    score =
-                        50 +
-                        (75 - 50) *
-                        (THRESHOLDS.ammonia.bad - value) /
-                        (THRESHOLDS.ammonia.bad - THRESHOLDS.ammonia.good);
-                else score = 1 + (50 - 1) * (value - THRESHOLDS.ammonia.bad) / (value - THRESHOLDS.ammonia.bad + 1);
-                break;
-
-            case "temperature":
-                if (value >= THRESHOLDS.temperature.veryGood[0] && value <= THRESHOLDS.temperature.veryGood[1]) score = 100;
-                else if (
-                    (value >= THRESHOLDS.temperature.good[0][0] && value <= THRESHOLDS.temperature.good[0][1]) ||
-                    (value >= THRESHOLDS.temperature.good[1][0] && value <= THRESHOLDS.temperature.good[1][1])
-                ) {
-                    score =
-                        75 +
-                        (100 - 75) *
-                        (THRESHOLDS.temperature.veryGood[0] - value) /
-                        (THRESHOLDS.temperature.veryGood[1] - THRESHOLDS.temperature.veryGood[0]);
-                } else if (
-                    (value >= THRESHOLDS.temperature.bad[0][0] && value <= THRESHOLDS.temperature.bad[0][1]) ||
-                    (value >= THRESHOLDS.temperature.bad[1][0] && value <= THRESHOLDS.temperature.bad[1][1])
-                ) {
-                    score =
-                        50 +
-                        (75 - 50) *
-                        (THRESHOLDS.temperature.veryGood[1] - value) /
-                        (THRESHOLDS.temperature.veryGood[1] - THRESHOLDS.temperature.veryGood[0]);
-                } else {
-                    score =
-                        1 + (50 - 1) * (value - THRESHOLDS.temperature.bad[1][1]) / (value - THRESHOLDS.temperature.bad[0][0]);
-                }
-                break;
-
-            case "humidity":
-                if (value >= THRESHOLDS.humidity.veryGood[0] && value <= THRESHOLDS.humidity.veryGood[1]) score = 100;
-                else if (
-                    (value >= THRESHOLDS.humidity.good[0][0] && value <= THRESHOLDS.humidity.good[0][1]) ||
-                    (value >= THRESHOLDS.humidity.good[1][0] && value <= THRESHOLDS.humidity.good[1][1])
-                )
-                    score =
-                        75 +
-                        (100 - 75) *
-                        (THRESHOLDS.humidity.veryGood[0] - value) /
-                        (THRESHOLDS.humidity.veryGood[1] - THRESHOLDS.humidity.veryGood[0]);
-                else if (
-                    (value >= THRESHOLDS.humidity.bad[0][0] && value <= THRESHOLDS.humidity.bad[0][1]) ||
-                    (value >= THRESHOLDS.humidity.bad[1][0] && value <= THRESHOLDS.humidity.bad[1][1])
-                ) {
-                    score =
-                        50 +
-                        (75 - 50) *
-                        (THRESHOLDS.humidity.veryGood[1] - value) /
-                        (THRESHOLDS.humidity.veryGood[1] - THRESHOLDS.humidity.veryGood[0]);
-                } else {
-                    score =
-                        1 + (50 - 1) * (value - THRESHOLDS.humidity.bad[1][1]) / (value - THRESHOLDS.humidity.bad[0][0]);
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        return { score, ...getStatusAndColor(score) };
-    };
-
     const statusAndColor = averageScore !== null ? getStatusAndColor(averageScore) : null;
 
-    useEffect(() => {
-        const score = calculateAverageScore();
-        setAverageScore(score);
-    }, [ammonia, temperature, humidity]);
+    //     const score = calculateAverageScore();
+    //     setAverageScore(score);
+    // }, [ammonia, temperature, humidity]);
 
 
-    // Function to calculate the average score
-    const calculateAverageScore = (): number => {
-        const ammoniaScore = ammonia ? calculateScore(ammonia, 'ammonia').score : 0;
-        const temperatureScore = temperature ? calculateScore(temperature, 'temperature').score : 0;
-        const humidityScore = humidity ? calculateScore(humidity, 'humidity').score : 0;
+    // // Function to calculate the average score
+    // const calculateAverageScore = (): number => {
+    //     const ammoniaScore = ammonia ? calculateScore(ammonia, 'ammonia').score : 0;
+    //     const temperatureScore = temperature ? calculateScore(temperature, 'temperature').score : 0;
+    //     const humidityScore = humidity ? calculateScore(humidity, 'humidity').score : 0;
 
-        const averageScore = (ammoniaScore + temperatureScore + humidityScore) / 3;
-        return Math.round(averageScore); // Round the result
-    };
+    //     const averageScore = (ammoniaScore + temperatureScore + humidityScore) / 3;
+    //     return Math.round(averageScore); // Round the result
+    // };
 
 
-    const updateAverageScore = async (averageScore: number) => {
-        const data = {
-            score: averageScore, // Only the field you want to update
-        };
+    // const updateAverageScore = async (averageScore: number) => {
+    //     const data = {
+    //         score: averageScore, // Only the field you want to update
+    //     };
 
-        try {
-            // Fetch existing data
-            const response = await fetch('http://localhost:8000/api/parameters/');
-            if (!response.ok) {
-                throw new Error('Failed to fetch chicken data');
-            }
+    //     try {
+    //         // Fetch existing data
+    //         const response = await fetch('http://localhost:8000/api/parameters/');
+    //         if (!response.ok) {
+    //             throw new Error('Failed to fetch chicken data');
+    //         }
 
-            const allData = await response.json();
+    //         const allData = await response.json();
 
-            if (allData.length > 0) {
-                // Assume first record for update
-                const record = allData[0];
+    //         if (allData.length > 0) {
+    //             // Assume first record for update
+    //             const record = allData[0];
 
-                // Patch existing record
-                const updateResponse = await fetch(`http://localhost:8000/api/parameters/${record.id}/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                });
+    //             // Patch existing record
+    //             const updateResponse = await fetch(`http://localhost:8000/api/parameters/${record.id}/`, {
+    //                 method: 'PATCH',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //                 body: JSON.stringify(data),
+    //             });
 
-                if (!updateResponse.ok) {
-                    const errorResult = await updateResponse.json();
-                    console.error('Error updating record:', errorResult);
-                    throw new Error('Failed to update chicken data');
-                }
+    //             if (!updateResponse.ok) {
+    //                 const errorResult = await updateResponse.json();
+    //                 console.error('Error updating record:', errorResult);
+    //                 throw new Error('Failed to update chicken data');
+    //             }
 
-                const updatedRecord = await updateResponse.json();
-                console.log('Chicken data updated:', updatedRecord);
-            } else {
-                // Create new record
-                const createResponse = await fetch('http://localhost:8000/api/parameters/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ammonia,
-                        temperature,
-                        humidity,
-                        score: averageScore,
-                    }),
-                });
+    //             const updatedRecord = await updateResponse.json();
+    //             console.log('Chicken data updated:', updatedRecord);
+    //         } else {
+    //             // Create new record
+    //             const createResponse = await fetch('http://localhost:8000/api/parameters/', {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //                 body: JSON.stringify({
+    //                     ammonia,
+    //                     temperature,
+    //                     humidity,
+    //                     score: averageScore,
+    //                 }),
+    //             });
 
-                if (!createResponse.ok) {
-                    const errorResult = await createResponse.json();
-                    console.error('Error creating record:', errorResult);
-                    throw new Error('Failed to create chicken data');
-                }
+    //             if (!createResponse.ok) {
+    //                 const errorResult = await createResponse.json();
+    //                 console.error('Error creating record:', errorResult);
+    //                 throw new Error('Failed to create chicken data');
+    //             }
 
-                const createdRecord = await createResponse.json();
-                console.log('New chicken data created:', createdRecord);
-            }
+    //             const createdRecord = await createResponse.json();
+    //             console.log('New chicken data created:', createdRecord);
+    //         }
 
-            setAverageScore(averageScore); // Update local state
-        } catch (error) {
-            console.error('Error in updateAverageScore:', error);
-            alert('An error occurred while updating the chicken data.');
-        }
-    };
+    //         setAverageScore(averageScore); // Update local state
+    //     } catch (error) {
+    //         console.error('Error in updateAverageScore:', error);
+    //         alert('An error occurred while updating the chicken data.');
+    //     }
+    // };
 
-    useEffect(() => {
-        if (ammonia !== null && temperature !== null && humidity !== null) {
-            const score = calculateAverageScore();
-            setAverageScore(score);
+    // useEffect(() => {
+    //     if (ammonia !== null && temperature !== null && humidity !== null) {
+    //         const score = calculateAverageScore();
+    //         setAverageScore(score);
 
-            // Call the update function with the new score
-            updateAverageScore(score);
-        }
-    }, [ammonia, temperature, humidity]); // Dependencies
-
-    const [status, setStatus] = useState({
-        ammonia: { text: "Sangat Baik", color: "text-green-500" },
-        temperature: { text: "Baik", color: "text-blue-500" },
-        humidity: { text: "Baik", color: "text-blue-500" },
-        overall: { text: "Baik", color: "text-blue-500" },
-    });
+    //         // Call the update function with the new score
+    //         updateAverageScore(score);
+    //     }
+    // }, [ammonia, temperature, humidity]); // Dependencies
+    const getTemperatureIcon = (temp: number) =>
+        temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
 
     const [warnings, setWarnings] = useState({
         ammonia: "",
@@ -513,162 +390,63 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         humidity: "",
     });
 
-    const [prevStatus, setPrevStatus] = useState({
-        ammonia: "Sangat Baik",
-        temperature: "Baik",
-        humidity: "Baik",
-    });
-
-    const getTemperatureIcon = (temp: number) =>
-        temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
-
-    const checkTemperatureStatus = (temp: number) => {
-        if (temp >= THRESHOLDS.temperature.veryGood[0] && temp <= THRESHOLDS.temperature.veryGood[1]) {
-            return { text: "Sangat Baik", color: "text-green-500" };
-        }
-        if (
-            (temp >= THRESHOLDS.temperature.good[0][0] && temp <= THRESHOLDS.temperature.good[0][1]) ||
-            (temp >= THRESHOLDS.temperature.good[1][0] && temp <= THRESHOLDS.temperature.good[1][1])
-        ) {
-            return { text: "Baik", color: "text-blue-500" };
-        }
-        if (
-            (temp >= THRESHOLDS.temperature.bad[0][0] && temp <= THRESHOLDS.temperature.bad[0][1]) ||
-            (temp >= THRESHOLDS.temperature.bad[1][0] && temp <= THRESHOLDS.temperature.bad[1][1])
-        ) {
-            return { text: "Buruk", color: "text-yellow-500" };
-        }
-        return { text: "Bahaya", color: "text-red-500" };
-    };
-
-    const checkHumidityStatus = (hum: number) => {
-        if (hum >= THRESHOLDS.humidity.veryGood[0] && hum <= THRESHOLDS.humidity.veryGood[1]) {
-            return { text: "Sangat Baik", color: "text-green-500" };
-        }
-        if (
-            (hum >= THRESHOLDS.humidity.good[0][0] && hum <= THRESHOLDS.humidity.good[0][1]) ||
-            (hum >= THRESHOLDS.humidity.good[1][0] && hum <= THRESHOLDS.humidity.good[1][1])
-        ) {
-            return { text: "Baik", color: "text-blue-500" };
-        }
-        if (
-            (hum >= THRESHOLDS.humidity.bad[0][0] && hum <= THRESHOLDS.humidity.bad[0][1]) ||
-            (hum >= THRESHOLDS.humidity.bad[1][0] && hum <= THRESHOLDS.humidity.bad[1][1])
-        ) {
-            return { text: "Buruk", color: "text-yellow-500" };
-        }
-        return { text: "Bahaya", color: "text-red-500" };
-    };
-
     useEffect(() => {
         if (ammonia === null || temperature === null || humidity === null) return;
 
-        const updatedStatus = { ...status };
-        const updatedWarnings = { ...warnings };
-        setOverallStatus(updatedStatus.overall);
+        // Create a new warnings object based on the current statuses
+        const newWarnings = {
+            ammonia: (ammoniaStatus === "Buruk" || ammoniaStatus === "Bahaya")
+                ? "Segera bersihkan kandang!"
+                : "",
+            temperature: (temperatureStatus === "Buruk" || temperatureStatus === "Bahaya")
+                ? "Segera atur suhu kandang!"
+                : "",
+            humidity: (humidityStatus === "Buruk" || humidityStatus === "Bahaya")
+                ? "Segera atur ventilasi kandang!"
+                : "",
+        };
 
-        // Check ammonia
-        if (ammonia < THRESHOLDS.ammonia.optimal) {
-            updatedStatus.ammonia = { text: "Sangat Baik", color: "text-green-500" };
-            updatedWarnings.ammonia = "";
-        } else if (ammonia >= THRESHOLDS.ammonia.optimal && ammonia < THRESHOLDS.ammonia.good) {
-            updatedStatus.ammonia = { text: "Baik", color: "text-blue-500" };
-            updatedWarnings.ammonia = "";
-        } else if (ammonia >= THRESHOLDS.ammonia.good && ammonia < THRESHOLDS.ammonia.bad) {
-            updatedStatus.ammonia = { text: "Buruk", color: "text-yellow-500" };
-            updatedWarnings.ammonia = "Segera bersihkan kandang!";
-            if (prevStatus.ammonia !== updatedStatus.ammonia.text) {
+        // Compare the new warnings with the current warnings to avoid unnecessary state updates
+        if (
+            newWarnings.ammonia !== warnings.ammonia ||
+            newWarnings.temperature !== warnings.temperature ||
+            newWarnings.humidity !== warnings.humidity
+        ) {
+            setWarnings(newWarnings);
+
+            // Send notifications only when warnings are updated
+            if (newWarnings.ammonia) {
                 sendNotification({
                     data: "Amonia",
-                    status: "Buruk",
+                    status: ammoniaStatus,
                     timestamp: new Date(),
-                    message: "Segera bersihkan kandang!",
+                    message: newWarnings.ammonia,
                     icon: <TbAtom2Filled />,
-                    color: updatedStatus.ammonia.color,
+                    color: ammoniaColor,
                 });
             }
-        } else {
-            updatedStatus.ammonia = { text: "Bahaya", color: "text-red-500" };
-            updatedWarnings.ammonia = "Segera bersihkan kandang!";
-            if (prevStatus.ammonia !== updatedStatus.ammonia.text) {
-                sendNotification({
-                    data: "Amonia",
-                    status: "Bahaya",
-                    timestamp: new Date(),
-                    message: "Segera bersihkan kandang!",
-                    icon: <TbAtom2Filled />,
-                    color: updatedStatus.ammonia.color,
-                });
-            }
-        }
-
-        // Check temperature
-        updatedStatus.temperature = checkTemperatureStatus(temperature);
-        if (updatedStatus.temperature.text === "Bahaya" || updatedStatus.temperature.text === "Buruk") {
-            const statusText = updatedStatus.temperature.text;
-            updatedWarnings.temperature = "Segera atur suhu kandang!";
-            if (prevStatus.temperature !== updatedStatus.temperature.text) {
+            if (newWarnings.temperature) {
                 sendNotification({
                     data: "Suhu",
-                    status: updatedStatus.temperature.text,
+                    status: temperatureStatus,
                     timestamp: new Date(),
-                    message: updatedWarnings.temperature,
+                    message: newWarnings.temperature,
                     icon: getTemperatureIcon(temperature),
-                    color: updatedStatus.temperature.color,
+                    color: temperatureColor,
                 });
             }
-        } else {
-            updatedWarnings.temperature = "";
-        }
-
-        // Check humidity
-        updatedStatus.humidity = checkHumidityStatus(humidity);
-        if (updatedStatus.humidity.text === "Bahaya" || updatedStatus.humidity.text === "Buruk") {
-            const statusText = updatedStatus.humidity.text;
-            updatedWarnings.humidity = "Segera atur ventilasi kandang!";
-            if (prevStatus.humidity !== updatedStatus.humidity.text) {
+            if (newWarnings.humidity) {
                 sendNotification({
                     data: "Kelembapan",
-                    status: updatedStatus.humidity.text,
+                    status: humidityStatus,
                     timestamp: new Date(),
-                    message: updatedWarnings.humidity,
+                    message: newWarnings.humidity,
                     icon: <IoWater />,
-                    color: updatedStatus.humidity.color,
+                    color: humidityColor,
                 });
             }
-        } else {
-            updatedWarnings.humidity = "";
         }
-
-        // Set overall status
-        const allStatuses = [updatedStatus.ammonia, updatedStatus.temperature, updatedStatus.humidity];
-
-        if (allStatuses.some((s) => s.text === "Bahaya")) {
-            setOverallStatus(updatedStatus.overall = { text: "Bahaya", color: "text-red-500" });
-        } else if (allStatuses.some((s) => s.text === "Buruk")) {
-            setOverallStatus(updatedStatus.overall = { text: "Buruk", color: "text-yellow-500" });
-        } else if (allStatuses.every((s) => s.text === "Sangat Baik")) {
-            setOverallStatus(updatedStatus.overall = { text: "Sangat Baik", color: "text-green-500" });
-        } else {
-            setOverallStatus(updatedStatus.overall = { text: "Baik", color: "text-blue-500" });
-        }
-
-
-        if (
-            prevStatus.ammonia !== updatedStatus.ammonia.text ||
-            prevStatus.temperature !== updatedStatus.temperature.text ||
-            prevStatus.humidity !== updatedStatus.humidity.text
-        ) {
-            setPrevStatus({
-                ammonia: updatedStatus.ammonia.text,
-                temperature: updatedStatus.temperature.text,
-                humidity: updatedStatus.humidity.text,
-            });
-            setStatus(updatedStatus);
-            setWarnings(updatedWarnings);
-        }
-
-    }, [ammonia, temperature, humidity]);
+    }, [ammonia, temperature, humidity, ammoniaStatus, temperatureStatus, humidityStatus]);
 
     // Fetch chicken data
     const fetchDataChicken = async () => {
@@ -1023,16 +801,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
             alert("Please select a harvest date.");
             return;
         }
-    
+
         const now = new Date();
         const target = new Date(targetDate);
-    
+
         // Cek jika tanggal yang dipilih kurang dari hari ini
         if (target <= now) {
             alert("Tanggal panen harus lebih dari hari ini.");
             return;
         }
-    
+
         // Set nilai awal ayam dan tanggal target
         setJumlahAwalAyam(initialCount);
         setJumlahAyam(initialCount);
@@ -1041,15 +819,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setCountdown(`Tersisa ${Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))} hari untuk panen`);
         setFarmingStarted(true);
         setDialogOpen(false);
-    
+
         // Panggil fungsi untuk menyimpan data ke API
         await postJumlahAyam(initialCount, target, now);
-    
+
         // Set timer countdown untuk menghitung sisa hari hingga panen
         const countdownInterval = setInterval(() => {
             const now = new Date();
             const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+
             if (diff < 0) {
                 clearInterval(countdownInterval);
                 setCountdown('Waktu panen telah tiba!');
@@ -1057,9 +835,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 setCountdown(`Tersisa ${diff} hari untuk panen`);
             }
         }, 1000 * 60 * 60 * 24); // Update setiap hari
-    
+
         // Remove the return cleanup function as it is not needed
-    }    
+    }
 
     function handleHarvest() {
         if (targetTanggal) {
@@ -1205,6 +983,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 updateJumlahAyam,
                 updateMortalitas,
                 handleStartFarming,
+                jumlahAyamInput,
+                setJumlahAyamInput,
 
                 // Chicken history
                 historyData,
@@ -1214,23 +994,41 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 timestamp,
                 setTimestamp,
                 ammonia,
-                temperature,
-                humidity,
                 setAmmonia,
+                temperature,
                 setTemperature,
+                humidity,
                 setHumidity,
                 overallStatus,
                 setOverallStatus,
-                status,
                 warnings,
                 averageScore,
                 setAverageScore,
                 statusAndColor,
                 historyParameter,
                 setHistoryParameter,
+
+                // Color states for parameters
+                ammoniaColor,
+                setAmmoniaColor,
+                temperatureColor,
+                setTemperatureColor,
+                humidityColor,
+                setHumidityColor,
+                overallColor,
+                setOverallColor,
+
+                // Statuses for each parameter
+                ammoniaStatus,
+                setAmmoniaStatus,
+                temperatureStatus,
+                setTemperatureStatus,
+                humidityStatus,
+                setHumidityStatus,
             }}
         >
             {children}
         </DataContext.Provider>
+
     );
 };

@@ -20,14 +20,14 @@ import Navbar from "../navbar";
 
 export default function Grafik() {
     const { notifications } = useNotifications();
-    const { ammonia, temperature, humidity, status, statusAndColor, averageScore } = useDataContext();
+    const { ammonia, temperature, humidity, overallStatus, overallColor, averageScore, ammoniaColor, humidityColor, temperatureColor, ammoniaStatus, humidityStatus, temperatureStatus } = useDataContext();
 
     const grafikData = [
         {
             title: "Skor Keseluruhan",
             value: averageScore ?? 0, // Contoh rata-rata
-            statusColor: statusAndColor?.color || "text-gray-500",
-            statusText: statusAndColor?.status || "N/A",
+            statusColor: overallColor || "text-gray-500",
+            statusText: overallStatus || "N/A",
             chartId: "overall",
             apiUrl: "http://127.0.0.1:8000/api/parameters/",
             dataType: "score",
@@ -35,8 +35,8 @@ export default function Grafik() {
         {
             title: "Amonia",
             value: ammonia ?? 0,
-            statusColor: status.ammonia.color || "text-gray-500",
-            statusText: status.ammonia.text || "N/A",
+            statusColor: ammoniaColor || "text-gray-500",
+            statusText: ammoniaStatus || "N/A",
             chartId: "ammonia",
             apiUrl: "http://127.0.0.1:8000/api/parameters/",
             dataType: "ammonia",
@@ -44,8 +44,8 @@ export default function Grafik() {
         {
             title: "Suhu",
             value: temperature ?? 0,
-            statusColor: status.temperature.color || "text-gray-500",
-            statusText: status.temperature.text || "N/A",
+            statusColor: temperatureColor || "text-gray-500",
+            statusText: temperatureStatus || "N/A",
             chartId: "temperature",
             apiUrl: "http://127.0.0.1:8000/api/parameters/",
             dataType: "temperature",
@@ -53,8 +53,8 @@ export default function Grafik() {
         {
             title: "Kelembapan",
             value: humidity ?? 0,
-            statusColor: status.humidity.color || "text-gray-500",
-            statusText: status.humidity.text || "N/A",
+            statusColor: humidityColor || "text-gray-500",
+            statusText: humidityStatus || "N/A",
             chartId: "humidity",
             apiUrl: "http://127.0.0.1:8000/api/parameters/",
             dataType: "humidity",

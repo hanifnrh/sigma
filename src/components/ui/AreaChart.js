@@ -67,6 +67,12 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
                 x: {
                     show: false,
                 },
+                y: {
+                    formatter: function (value) {
+                        // Format the value to two decimal places
+                        return value.toFixed(2);
+                    },
+                },
             },
             fill: {
                 type: "gradient",

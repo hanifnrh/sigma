@@ -53,16 +53,19 @@ export default function Dashboard() {
         setHumidity,
         overallStatus,
         setOverallStatus,
-        status,
         warnings,
+        ammoniaColor,
+        temperatureColor,
+        humidityColor,
+        overallColor
     } = useDataContext();
 
     const grafikData = [
         {
             title: "Skor Keseluruhan",
             value: averageScore ?? 0, // Contoh rata-rata
-            statusColor: statusAndColor?.color || "text-gray-500",
-            statusText: statusAndColor?.status || "N/A",
+            statusColor: overallColor || "text-gray-500",
+            statusText: overallStatus || "N/A",
             chartId: "overall",
             apiUrl: "http://127.0.0.1:8000/api/parameters/",
             dataType: "score",
@@ -77,21 +80,21 @@ export default function Dashboard() {
             label: "Amonia",
             value: `${ammonia ?? 0} ppm`,
             icon: <TbAtom2Filled />,
-            statusColor: status.ammonia.color,
+            statusColor: ammoniaColor,
             warning: warnings.ammonia,
         },
         {
             label: "Suhu",
             value: `${temperature ?? 0} °C`,
             icon: getTemperatureIcon(temperature ?? 0),
-            statusColor: status.temperature.color,
+            statusColor: temperatureColor,
             warning: warnings.temperature,
         },
         {
             label: "Kelembapan",
             value: `${humidity ?? 0}%`,
             icon: <IoWater />,
-            statusColor: status.humidity.color,
+            statusColor: humidityColor,
             warning: warnings.humidity,
         },
     ];
@@ -239,16 +242,16 @@ export default function Dashboard() {
                     <div className="container-left flex flex-col justify-center items-center w-full border-r">
                         <div className='flex justify-between items-center py-5 px-4 w-full border-b'>
                             <div>
-                                <span className={`text-2xl md:text-4xl title-head ${getStatusGradient(overallStatus.text)} cliptext text-transparent`}>
-                                    Status Keseluruhan: {overallStatus.text}
+                                <span className={`text-2xl md:text-4xl title-head ${getStatusGradient(overallStatus)} cliptext text-transparent`}>
+                                    Status Keseluruhan: {overallStatus}
                                 </span>
                             </div>
                             <div className='border-l px-5'>
                                 <div className='navbar-title body-bold text-sm sm:text-xs'>
                                     SKOR TOTAL
                                 </div>
-                                <div className={`text-2xl md:text-4xl title-head ${statusAndColor?.color}`}>
-                                    {averageScore}
+                                <div className={`text-2xl md:text-4xl title-head ${overallColor}`}>
+                                    {averageScore?.toFixed(0)}<span className="text-lg">/100</span>
                                 </div>
                             </div>
                         </div>

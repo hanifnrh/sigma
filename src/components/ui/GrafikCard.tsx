@@ -48,7 +48,7 @@ export default function GrafikCard({
                 <div className="flex justify-between">
                     <div>
                         <p className="text-base font-normal text-gray-500 dark:text-gray-400">{title}</p>
-                        <h5 className={`leading-none text-3xl font-bold ${statusColor} pb-2`}>{value} {unit}</h5>
+                        <h5 className={`leading-none text-3xl font-bold ${statusColor} pb-2`}>{value.toFixed(0)} {unit}</h5>
                     </div>
                     <div className={`flex items-center px-2.5 py-0.5 text-base font-semibold ${statusColor} text-center`}>
                         {statusText}

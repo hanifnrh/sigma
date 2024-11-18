@@ -49,10 +49,9 @@ type Notification = {
 
 export default function DataAyam() {
     // Use context values
-    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted, ayamDecreasePercentage, daysToTarget, statusAyam, ayamId, handleHarvest, confirmHarvest, showConfirmHarvestDialog, setShowConfirmHarvestDialog, updateAgeInDays, postJumlahAyam, handleStartFarming, updateJumlahAyam, updateMortalitas} = useDataContext();
+    const { jumlahAyam, setJumlahAyam, mortalitas, setMortalitas, ageInDays, setAgeInDays, jumlahAwalAyam, setJumlahAwalAyam, tanggalMulai, setTanggalMulai, targetTanggal, setTargetTanggal, farmingStarted, setFarmingStarted, ayamDecreasePercentage, daysToTarget, statusAyam, ayamId, handleHarvest, confirmHarvest, showConfirmHarvestDialog, setShowConfirmHarvestDialog, updateAgeInDays, postJumlahAyam, handleStartFarming, updateJumlahAyam, updateMortalitas, jumlahAyamInput, setJumlahAyamInput} = useDataContext();
 
     // Component-specific state
-    const [jumlahAyamInput, setJumlahAyamInput] = useState<number>(0);
     const [countdown, setCountdown] = useState<string>('');
     const [harvested, setHarvested] = useState(false);
     const [statsData, setStatsData] = useState<Array<{ Parameter: string; Value: string; Status: string; Timestamp: Date }>>([]);

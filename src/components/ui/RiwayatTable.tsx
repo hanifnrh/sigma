@@ -19,31 +19,22 @@ const roundToNearest5Minutes = (timestamp: Date) => {
 };
 
 export function RiwayatTable() {
-    const {
-        historyData,
-        historyParameter,
-    } = useDataContext();
+    const { historyData, historyParameter } = useDataContext();
 
     // State for combined history
     const [combinedHistory, setCombinedHistory] = useState<any[]>([]);
 
     useEffect(() => {
         const mergeData = () => {
-            const dataMap = new Map<string, any>(); // Gunakan Map untuk menghindari duplikasi berdasarkan timestamp
+            const dataMap = new Map<string, any>(); // Use Map to avoid duplicate entries based on timestamp
             let lastData: any = {}; // Initialize with empty object for storing the last valid data
     
-            // Helper untuk membulatkan ke 5 menit terdekat
-            const roundToNearest5Minutes = (date: Date) => {
-                const ms = 1000 * 60 * 5; // 5 menit dalam milidetik
-                return new Date(Math.round(date.getTime() / ms) * ms);
-            };
-    
-            // Proses data parameter
+            // Process parameter data
             historyParameter.forEach((param) => {
                 const roundedTimestamp = roundToNearest5Minutes(new Date(param.timestamp));
                 const key = roundedTimestamp.toISOString();
     
-                // Jika tidak ada data sebelumnya, gunakan data default atau sebelumnya
+                // If no data exists for this timestamp, use the previous data
                 if (!dataMap.has(key)) {
                     dataMap.set(key, {
                         timestamp: roundedTimestamp,
@@ -57,7 +48,7 @@ export function RiwayatTable() {
                         usia_ayam: lastData.usia_ayam || null,
                     });
                 } else {
-                    // Update data jika sudah ada
+                    // Update data if it already exists
                     const existingData = dataMap.get(key);
                     dataMap.set(key, {
                         ...existingData,
@@ -69,49 +60,49 @@ export function RiwayatTable() {
                     });
                 }
     
-                // Simpan data terakhir
+                // Save the last valid data
                 lastData = { ...dataMap.get(key) };
             });
     
-            // Proses data ayam
+            // Process chicken data
             historyData.forEach((ayam) => {
                 const roundedTimestamp = roundToNearest5Minutes(new Date(ayam.timestamp));
                 const key = roundedTimestamp.toISOString();
     
                 if (!dataMap.has(key)) {
-                    // Tambahkan data ayam baru
+                    // Add new chicken data
                     dataMap.set(key, {
                         timestamp: roundedTimestamp,
-                        temperature: null,
-                        humidity: null,
-                        ammonia: null,
-                        score: null,
-                        status: null,
+                        temperature: lastData.temperature || null,
+                        humidity: lastData.humidity || null,
+                        ammonia: lastData.ammonia || null,
+                        score: lastData.score || null,
+                        status: lastData.status || null,
                         jumlah_ayam: ayam.jumlah_ayam,
                         mortalitas: ayam.mortalitas,
                         usia_ayam: ayam.usia_ayam,
                     });
                 } else {
-                    // Update data ayam jika sudah ada
+                    // Update chicken data if it exists
                     const existingData = dataMap.get(key);
                     dataMap.set(key, {
                         ...existingData,
-                        jumlah_ayam: ayam.jumlah_ayam, // Overwrite dengan nilai terbaru
+                        jumlah_ayam: ayam.jumlah_ayam, // Overwrite with the latest value
                         mortalitas: ayam.mortalitas,
                         usia_ayam: ayam.usia_ayam,
                     });
                 }
     
-                // Simpan data terakhir
+                // Save the last valid data
                 lastData = { ...dataMap.get(key) };
             });
     
-            // Pastikan data yang tidak ada pembaruan tetap muncul dengan data terakhir
+            // Ensure that data without updates still appears with the last valid data
             const mergedArray = Array.from(dataMap.values()).sort(
                 (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
             );
     
-            // Update state dengan data yang sudah digabungkan
+            // Update state with the merged data
             setCombinedHistory(mergedArray);
         };
     
@@ -154,13 +145,15 @@ export function RiwayatTable() {
                         {combinedHistory.map((item, index) => (
                             <TableRow key={index}>
                                 <TableCell className="font-medium">{new Date(item.timestamp).toLocaleString()}</TableCell>
-                                <TableCell className="font-medium">{item.temperature}</TableCell>
-                                <TableCell className="font-medium">{item.humidity}</TableCell>
-                                <TableCell className="font-medium">{item.ammonia}</TableCell>
-                                <TableCell className="font-medium">{item.jumlah_ayam}</TableCell>
-                                <TableCell className="font-medium">{item.mortalitas}</TableCell>
-                                <TableCell className="font-medium">{item.usia_ayam}</TableCell>
-                                <TableCell className="font-medium">{item.score}</TableCell>
+                                <TableCell className="font-medium">{item.temperature} °C</TableCell>
+                                <TableCell className="font-medium">{item.humidity} %</TableCell>
+                                <TableCell className="font-medium">{item.ammonia} ppm</TableCell>
+                                <TableCell className="font-medium">{item.jumlah_ayam} ekor</TableCell>
+                                <TableCell className="font-medium">{item.mortalitas} %</TableCell>
+                                <TableCell className="font-medium">{item.usia_ayam} hari</TableCell>
+                                <TableCell className="font-medium">
+                                    {typeof item.score === 'number' && !isNaN(item.score) ? item.score.toFixed(2) : 'N/A'}
+                                </TableCell>
                                 <TableCell>
                                     <Button variant={getButtonVariant(item.status)}>
                                         {item.status}

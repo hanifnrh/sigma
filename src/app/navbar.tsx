@@ -19,7 +19,7 @@ import { RxDashboard } from "react-icons/rx";
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const currentPath = usePathname();
-    const { overallStatus } = useDataContext();
+    const { overallStatus, overallColor } = useDataContext();
 
     const getStatusColor = (statusText: string) => ({
         "Sangat Baik": "bg-customGreen",
@@ -80,7 +80,7 @@ const Navbar: React.FC = () => {
                         </ul>
 
                         <div className="status-container w-full relative mt-5 sm:mt-0">
-                            <div className={`${getStatusColor(overallStatus.text)} rounded-xl h-16 w-full flex items-center`}>
+                            <div className={`${overallColor} rounded-xl h-16 w-full flex items-center`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="120" height="93" viewBox="0 0 120 93" fill="none" className='absolute top-0 left-0'>
                                     <circle opacity="0.2" cx="60.7009" cy="60.7009" r="60.7009" transform="matrix(0.996195 0.0871557 0.0871557 -0.996195 -74.1056 81.7822)" fill="url(#paint0_linear_58_5)" />
                                     <circle opacity="0.2" cx="60.7009" cy="60.7009" r="60.7009" transform="matrix(0.996195 0.0871557 0.0871557 -0.996195 -11.7125 48.972)" fill="url(#paint1_linear_58_5)" />
@@ -96,7 +96,7 @@ const Navbar: React.FC = () => {
                                     </defs>
                                 </svg>
                                 <div className='flex w-full items-center justify-between px-8'>
-                                    <p className='text-white text-start body-bold text-xl'>Status: {overallStatus.text}</p>
+                                    <p className='text-white text-start body-bold text-xl'>Status: {overallStatus}</p>
                                     <Dynamic />
                                 </div>
                             </div>

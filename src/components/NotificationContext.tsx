@@ -1,5 +1,5 @@
 "use client"
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 type Notification = {
     data: string;
@@ -20,9 +20,10 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    const addNotification = (notification: Notification) => {
+    // Use useCallback to memoize the function and prevent unnecessary re-renders
+    const addNotification = useCallback((notification: Notification) => {
         setNotifications((prev) => [...prev, notification]);
-    };
+    }, []);
 
     return (
         <NotificationContext.Provider value={{ notifications, addNotification }}>
