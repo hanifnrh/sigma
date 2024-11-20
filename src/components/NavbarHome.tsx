@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
                                 <Link href="/credits" className={currentPath === "/credits" ? "block py-2 px-3 font-bold text-dark-500 hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:p-0 " : "block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:p-0 "}>Bantuan</Link>
                             </li>
                             <li>
-                                <Link href="/credits" className={`${currentPath === "/credits" ? "block py-2 px-3 font-bold text-white bg-#8735EB;" : "block py-3 px-6 font-light text-white bg-customPurple hover:bg-purple-500 rounded-lg"}`}>
+                                <Link href="/login" className={`${currentPath === "/login" ? "block py-2 px-3 font-bold text-white bg-#8735EB;" : "block py-3 px-6 font-light text-white bg-customPurple hover:bg-purple-500 rounded-lg"}`}>
                                     Masuk
                                 </Link>
                             </li>
