@@ -108,12 +108,17 @@ export default function DataAyam() {
             icon: <FaRegCalendarAlt />,
             statusColor: getAgeStatusColor(),
             warning:
-                farmingStarted && daysToTarget !== null && daysToTarget <= 7
-                    ? `${daysToTarget} hari lagi untuk panen.`
+                farmingStarted && daysToTarget !== null
+                    ? daysToTarget > 0
+                        ? `${daysToTarget} hari lagi untuk panen.`
+                        : daysToTarget === 0
+                            ? "Hari ini adalah hari panen."
+                            : ""
                     : farmingStarted && !targetTanggal
                         ? "Target panen belum diatur."
-                        : "", // If farming started but no target date, show message
+                        : "", // Default: No warning if farming has not started
         },
+
     ];
 
     return (

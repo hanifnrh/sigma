@@ -1,32 +1,41 @@
 // components/PrivateRoute.tsx
-'use client'
+'use client';
 
 import { useRouter } from 'next/navigation'; // Gunakan usePathname dari next/navigation
 import { useEffect, useState } from 'react';
-
+import { Loader } from './ui/loader';
 interface PrivateRouteProps {
     children: React.ReactNode;
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const router = useRouter();  // Menggunakan useRouter yang lebih kompatibel di dalam halaman
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null untuk status belum diverifikasi
+    const router = useRouter(); // Gunakan useRouter untuk navigasi
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            // Jika token tidak ada, redirect ke halaman login
-            router.push('/login');
-        } else {
-            setIsAuthenticated(true);
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // Jika token tidak ada, redirect ke halaman login
+                router.push('/login');
+                setIsAuthenticated(false); // Status login false
+            } else {
+                setIsAuthenticated(true); // Status login true
+            }
         }
     }, [router]);
 
-    if (!isAuthenticated) {
-        return <p>Loading...</p>;  // Tampilkan loading sementara
+    // Saat status belum diverifikasi
+    if (isAuthenticated === null) {
+        return(
+            <div className="flex justify-center items-center h-screen">
+                <Loader/>
+            </div>
+        );
     }
 
-    return <>{children}</>;  // Jika sudah login, tampilkan konten yang ada di dalam PrivateRoute
+    // Jika sudah login, tampilkan konten anak-anak
+    return <>{children}</>;
 };
 
 export default PrivateRoute;

@@ -3,12 +3,13 @@ const flowbite = require("flowbite-react/tailwind");
 const config = {
 	darkMode: ["class"],
 	content: [
-		'./pages/**/*.{ts,tsx}',
-		'./components/**/*.{ts,tsx}',
-		'./app/**/*.{ts,tsx}',
-		'./src/**/*.{ts,tsx}',
+		"./pages/**/*.{ts,tsx}",
+		"./components/**/*.{ts,tsx}",
+		"./app/**/*.{ts,tsx}",
+		"./src/**/*.{ts,tsx}",
 		"./node_modules/flowbite/**/*.js",
-		flowbite.content(),
+		"flowbite.content()",
+		"./node_modules/@nextui-org/theme/dist/components/(calendar|date-input|date-picker|button|ripple|spinner|popover).js"
 	],
 	prefix: "",
 	theme: {
@@ -118,8 +119,9 @@ const config = {
 		}
 	},
 	plugins: [
-		require("tailwindcss-animate"),
-		flowbite.plugin(),
+		require("tailwindcss-animate"), // Fix syntax
+		require("flowbite/plugin"), // Use correct Flowbite plugin
+		require("@nextui-org/theme"), // Include NextUI plugin
 	],
 } satisfies Config
 

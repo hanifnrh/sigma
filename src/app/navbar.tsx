@@ -5,8 +5,8 @@ import Dynamic from '@/components/ui/Dynamic';
 import withIconStyles from "@/components/ui/withIconStyles";
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React, { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import { GiRooster } from "react-icons/gi";
 import { GoHistory } from "react-icons/go";
 import { HiMenuAlt2, HiX } from "react-icons/hi";
@@ -20,7 +20,18 @@ const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const currentPath = usePathname();
     const { overallStatus, overallColor } = useDataContext();
+    const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        setIsAuthenticated(!!token); // Set true if token exists
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        router.push('/login');
+    };
     const getStatusColor = (statusText: string) => ({
         "Sangat Baik": "bg-customGreen",
         "Baik": "bg-blue-500",
@@ -53,8 +64,8 @@ const Navbar: React.FC = () => {
     return (
         <div className="bg-white dark:bg-zinc-900 w-full mx-auto">
             <div className="fixed top-0 z-50 w-full bg-white dark:bg-gray-800 transition-colors">
-                <button onClick={toggleNavbar} className="p-2 text-gray-900 sm:hidden dark:text-white z-50 bg-white w-full border-b relative" aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}>
-                    {isOpen ? <>Tutup Menu <StyledCloseIcon /></> : <>Buka Menu <StyledMenuIcon /></>}
+                <button onClick={toggleNavbar} className="flex justify-start items-center p-2 text-gray-900 sm:hidden dark:text-white z-50 bg-white w-full border-b relative" aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}>
+                    {isOpen ? <><StyledCloseIcon /> Tutup Menu</> : <><StyledMenuIcon /> Buka Menu</>}
                 </button>
 
                 <aside id="separator-sidebar" className={`fixed top-0 left-0 z-40 w-64 sm:w-44 md:w-56 xl:w-64 h-screen transition-transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0`} aria-label="Sidebar">
@@ -100,7 +111,7 @@ const Navbar: React.FC = () => {
                                     <Dynamic />
                                 </div>
                             </div>
-                            <Button variant="outline" className='w-full mt-5 body-bold'>Log Out</Button>
+                            <Button variant="outline" className='w-full mt-5 body-bold'onClick={handleLogout}>Log Out</Button>
                         </div>
                     </div>
                 </aside>

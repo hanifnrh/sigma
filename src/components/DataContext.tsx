@@ -198,6 +198,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -318,98 +320,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
     const statusAndColor = averageScore !== null ? getStatusAndColor(averageScore) : null;
 
-    //     const score = calculateAverageScore();
-    //     setAverageScore(score);
-    // }, [ammonia, temperature, humidity]);
-
-
-    // // Function to calculate the average score
-    // const calculateAverageScore = (): number => {
-    //     const ammoniaScore = ammonia ? calculateScore(ammonia, 'ammonia').score : 0;
-    //     const temperatureScore = temperature ? calculateScore(temperature, 'temperature').score : 0;
-    //     const humidityScore = humidity ? calculateScore(humidity, 'humidity').score : 0;
-
-    //     const averageScore = (ammoniaScore + temperatureScore + humidityScore) / 3;
-    //     return Math.round(averageScore); // Round the result
-    // };
-
-
-    // const updateAverageScore = async (averageScore: number) => {
-    //     const data = {
-    //         score: averageScore, // Only the field you want to update
-    //     };
-
-    //     try {
-    //         // Fetch existing data
-    //         const response = await fetch('http://localhost:8000/api/parameters/');
-    //         if (!response.ok) {
-    //             throw new Error('Failed to fetch chicken data');
-    //         }
-
-    //         const allData = await response.json();
-
-    //         if (allData.length > 0) {
-    //             // Assume first record for update
-    //             const record = allData[0];
-
-    //             // Patch existing record
-    //             const updateResponse = await fetch(`http://localhost:8000/api/parameters/${record.id}/`, {
-    //                 method: 'PATCH',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                 },
-    //                 body: JSON.stringify(data),
-    //             });
-
-    //             if (!updateResponse.ok) {
-    //                 const errorResult = await updateResponse.json();
-    //                 console.error('Error updating record:', errorResult);
-    //                 throw new Error('Failed to update chicken data');
-    //             }
-
-    //             const updatedRecord = await updateResponse.json();
-    //             console.log('Chicken data updated:', updatedRecord);
-    //         } else {
-    //             // Create new record
-    //             const createResponse = await fetch('http://localhost:8000/api/parameters/', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                 },
-    //                 body: JSON.stringify({
-    //                     ammonia,
-    //                     temperature,
-    //                     humidity,
-    //                     score: averageScore,
-    //                 }),
-    //             });
-
-    //             if (!createResponse.ok) {
-    //                 const errorResult = await createResponse.json();
-    //                 console.error('Error creating record:', errorResult);
-    //                 throw new Error('Failed to create chicken data');
-    //             }
-
-    //             const createdRecord = await createResponse.json();
-    //             console.log('New chicken data created:', createdRecord);
-    //         }
-
-    //         setAverageScore(averageScore); // Update local state
-    //     } catch (error) {
-    //         console.error('Error in updateAverageScore:', error);
-    //         alert('An error occurred while updating the chicken data.');
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     if (ammonia !== null && temperature !== null && humidity !== null) {
-    //         const score = calculateAverageScore();
-    //         setAverageScore(score);
-
-    //         // Call the update function with the new score
-    //         updateAverageScore(score);
-    //     }
-    // }, [ammonia, temperature, humidity]); // Dependencies
     const getTemperatureIcon = (temp: number) =>
         temp > 32 ? <FaTemperatureHigh /> : <FaTemperatureLow />;
 
@@ -542,6 +452,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
+                        "Authorization": `Token ${token}`,
                     },
                     body: JSON.stringify(data),
                 });
@@ -577,6 +488,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    "Authorization": `Token ${token}`,
                 },
                 body: JSON.stringify(data),
             });
@@ -617,6 +529,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
+                        "Authorization": `Token ${token}`,
                     },
                     body: JSON.stringify(data),
                 });
@@ -635,6 +548,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        "Authorization": `Token ${token}`,
                     },
                     body: JSON.stringify({
                         jumlah_ayam_awal: jumlahAyamAwal,  // Set initial count
@@ -698,6 +612,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        "Authorization": `Token ${token}`,
                     },
                     body: JSON.stringify({
                         mortalitas: parseFloat(mortalityPercentage) || 0,  // Pastikan mortalitas adalah angka
@@ -730,6 +645,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
+                        "Authorization": `Token ${token}`,
                     },
                     body: JSON.stringify(data),
                 });
@@ -771,6 +687,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
+                        "Authorization": `Token ${token}`,
                     },
                 });
 
@@ -895,7 +812,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         jumlahAwalAyam > 0 ? ((jumlahAwalAyam - jumlahAyam) / jumlahAwalAyam) * 100 : 0;
 
     const daysToTarget = targetTanggal
-        ? Math.floor((targetTanggal.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) - ageInDays
+        ? Math.floor((targetTanggal.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
         : null;
 
     const [statusAyam, setStatusAyam] = useState({
@@ -947,9 +864,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 });
             }
         }
-        if (daysToTarget !== null && daysToTarget <= 7) {
+
+        if (farmingStarted && daysToTarget !== null && daysToTarget <= 7) {
             updatedStatusAyam.daysToTarget = { text: "Siap", color: "text-green-500" };
             updatedWarningsAyam.daysToTarget = "Sudah dekat tanggal panen";
+
+            // Kirim notifikasi hanya jika status berubah
             if (prevStatusAyam.daysToTarget !== updatedStatusAyam.daysToTarget.text) {
                 sendNotification({
                     data: "Usia Ayam",

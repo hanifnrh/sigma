@@ -39,7 +39,7 @@ const AreaChart = ({ id, color, apiUrl, dataType }) => {
                 setChartData({ seriesData, categories });
             } catch (error) {
                 // console.error("Error fetching data:", error);
-                alert('Data masih kosong')
+                console.log('Data grafik kosong')
             }
         };
         

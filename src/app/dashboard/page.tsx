@@ -139,10 +139,15 @@ export default function Dashboard() {
             icon: <FaRegCalendarAlt />,
             statusColor: getAgeStatusColor(),
             warning:
-                daysToTarget !== null && daysToTarget <= 7
-                    ? `${daysToTarget} hari lagi untuk panen.`
-                    : "",
+                daysToTarget !== null
+                    ? daysToTarget > 0
+                        ? `${daysToTarget} hari lagi untuk panen.`
+                        : daysToTarget === 0
+                            ? "Hari ini adalah hari panen."
+                            : "" // Tidak tampilkan jika negatif
+                    : "", // Tidak tampilkan jika null
         },
+
     ];
 
     const getStatusGradient = (statusText: string) => {
@@ -156,7 +161,7 @@ export default function Dashboard() {
             case "Bahaya":
                 return "bg-[linear-gradient(107deg,#EF4444_8.32%,#B91C1C_60.18%,#7F1D1D_105.75%)]";
             default:
-                return "";
+                return "bg-[linear-gradient(107deg,#16CC53_8.32%,#108496_60.18%,#35B6CA_105.75%)]";
         }
     };
     const handleDownload = () => {
@@ -244,8 +249,11 @@ export default function Dashboard() {
                         <div className="container-left flex flex-col justify-center items-center w-full border-r">
                             <div className='flex justify-between items-center py-5 px-4 w-full border-b'>
                                 <div>
-                                    <span className={`text-2xl md:text-4xl title-head ${getStatusGradient(overallStatus)} cliptext text-transparent`}>
-                                        Status Keseluruhan: {overallStatus}
+                                    <span
+                                        className={`text-2xl md:text-4xl title-head ${getStatusGradient(overallStatus)
+                                            } cliptext text-transparent`}
+                                    >
+                                        Status Keseluruhan: {overallStatus || "-"}
                                     </span>
                                 </div>
                                 <div className='border-l px-5'>
@@ -253,7 +261,7 @@ export default function Dashboard() {
                                         SKOR TOTAL
                                     </div>
                                     <div className={`text-2xl md:text-4xl title-head ${overallColor}`}>
-                                        {averageScore?.toFixed(0)}<span className="text-lg">/100</span>
+                                        {averageScore?.toFixed(0) || "-"}<span className="text-lg">/100</span>
                                     </div>
                                 </div>
                             </div>
